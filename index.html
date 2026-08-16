@@ -212,6 +212,10 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       导出备份
     </button>
+    <button class="btn" id="csvBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      导出Excel
+    </button>
     <button class="btn" id="importBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,15 12,10 7,15"/><line x1="12" y1="10" x2="12" y2="22"/></svg>
       导入恢复
@@ -249,6 +253,7 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="搜索品牌、产品名、品类...">
     </div>
+    <div class="filter-bar" id="statusBar"></div>
     <div class="filter-bar" id="filterBar"></div>
     <div class="grid" id="archiveGrid"></div>
   </div>
@@ -349,6 +354,7 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
     <div class="modal-body" id="detailBody"></div>
     <div class="modal-foot">
       <button class="btn" id="detailEdit" style="flex:1">编辑</button>
+      <button class="btn" id="detailCopy" style="flex:1">复制一份</button>
       <button class="btn btn-primary" id="detailDelete" style="flex:1;background:var(--rose)">删除</button>
     </div>
   </div>
@@ -382,17 +388,21 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
     </div>
     <div class="modal-body">
       <div class="form-row">
+        <div class="form-group"><label class="form-label">统一品牌</label><input class="form-input" id="b-brand" placeholder="整套同品牌时填一次，条目留空自动继承"></div>
         <div class="form-group"><label class="form-label">套装名称</label><input class="form-input" id="b-name" placeholder="如 双11礼盒"></div>
-        <div class="form-group"><label class="form-label">购买时间</label><input class="form-input" id="b-date" type="date"></div>
       </div>
-      <div class="form-row">
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">购买时间</label><input class="form-input" id="b-date" type="date"></div>
         <div class="form-group"><label class="form-label">套装总价 ¥ <span class="req">*</span></label><input class="form-input" id="b-total" type="number" inputmode="decimal" placeholder="0"></div>
-        <div class="form-group"><label class="form-label">渠道</label><input class="form-input" id="b-channel" placeholder="天猫/专柜（选填）"></div>
+        <div class="form-group"><label class="form-label">渠道</label><input class="form-input" id="b-channel" placeholder="天猫（选填）"></div>
       </div>
       <div id="b-summary" class="b-summary" style="display:none"></div>
-      <div class="form-label" style="margin:4px 0 8px">套装内产品（至少 2 件，填「单买价」用于按比例分摊）</div>
+      <div class="form-label" style="margin:4px 0 8px">套装内产品（至少 2 件，填「单买价」用于按比例分摊；同品牌可留空品牌栏）</div>
       <div id="b-items"></div>
-      <button class="btn" id="b-add" style="width:100%;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;color:var(--ink2)">+ 添加一件</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="b-add" style="flex:1;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;color:var(--ink2)">+ 添加一件</button>
+        <button class="btn" id="b-copy" style="flex:1;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;color:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制上一条</button>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn" id="b-cancel" style="flex:0 0 auto">取消</button>
@@ -596,9 +606,18 @@ function renderFilterBar(){
     b.onclick=()=>{filterCat=b.dataset.cat;renderFilterBar();renderArchive()};
   });
 }
+function renderStatusBar(){
+  const bar=$('#statusBar');
+  const opts=[{k:'all',t:'全部状态'},...STATUS];
+  bar.innerHTML=opts.map(o=>`<button class="filter-opt ${filterStatus===o.k?'active':''}" data-st="${o.k}">${o.t}</button>`).join('');
+  bar.querySelectorAll('.filter-opt').forEach(b=>{
+    b.onclick=()=>{filterStatus=b.dataset.st;renderStatusBar();renderArchive()};
+  });
+}
 
 function renderArchive(){
   renderFilterBar();
+  renderStatusBar();
   const grid=$('#archiveGrid');
   let list=products.filter(p=>{
     if(filterStatus!=='all' && calcStatus(p)!==filterStatus)return false;
@@ -1043,6 +1062,8 @@ function openForm(id,prefill){
       repurchase:rbVal,
       feeling:body.querySelector('#f-feeling').value.trim(),
       status,
+      bundle:p.bundle||'',
+      bundleTotal:p.bundleTotal||0,
       createdAt:p.createdAt||today()
     };
     if(id){const i=products.findIndex(x=>x.id===id);products[i]=obj;toast('已更新')}
@@ -1085,6 +1106,10 @@ function openDetail(id){
   `;
   $('#detailModal').classList.add('show');
   $('#detailEdit').onclick=()=>{closeDetail();openForm(id)};
+  $('#detailCopy').onclick=()=>{
+    closeDetail();
+    openForm(null,{...p,id:undefined,buyDate:'',openDate:'',emptyDate:'',expireDate:'',stock:100,status:'sealed',bundle:'',bundleTotal:0,createdAt:''});
+  };
   $('#detailDelete').onclick=()=>{
     closeDetail();
     showConfirm('确定要删除这个产品吗？',()=>{
@@ -1116,6 +1141,38 @@ function exportData(){
   a.click();
   URL.revokeObjectURL(a.href);
   toast('已导出 '+products.length+' 条');
+}
+// Excel/CSV 导出：UTF-8 BOM 保证中文不乱码，数字列为纯数字方便数据透视
+function exportCSV(){
+  if(!products.length){toast('暂无数据可导出');return}
+  const rbTxt=v=>v==='yes'?'想回购':v==='no'?'不回购':v==='maybe'?'观望':'';
+  const headers=['品牌','产品名','品类','规格','购买金额','购买时间','启用时间','空瓶时间','保质期','到期日','库存余量%','适合季节','综合评分','回购意愿','使用感受','使用状态','所属套装','套装实付','创建时间'];
+  const esc=v=>{
+    const s=String(v==null?'':v);
+    return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  };
+  const rows=products.map(p=>[
+    p.brand||'',p.name||'',p.category||'',p.spec||'',
+    Number(p.price)||0,
+    p.buyDate||'',p.openDate||'',p.emptyDate||'',
+    p.shelfLife||'',p.expireDate||'',
+    p.stock!=null?p.stock:'',
+    (p.seasons||[]).join('、'),
+    p.score||0,
+    rbTxt(p.repurchase),
+    (p.feeling||'').replace(/\r?\n/g,' '),
+    statusInfo(calcStatus(p)).t,
+    p.bundle||'',p.bundleTotal||'',
+    p.createdAt||''
+  ]);
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(esc).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='梳妆台明细_'+today()+'.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已导出 '+products.length+' 条，Excel 打开即可透视');
 }
 function importData(file){
   const reader=new FileReader();
@@ -1167,6 +1224,7 @@ $('#formClose').onclick=closeForm;
 $('#formCancel').onclick=closeForm;
 $('#detailClose').onclick=closeDetail;
 $('#exportBtn').onclick=exportData;
+$('#csvBtn').onclick=exportCSV;
 $('#importBtn').onclick=()=>$('#importFile').click();
 $('#importFile').onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''};
 $('#clearBtn').onclick=()=>{
@@ -1214,7 +1272,7 @@ function addBundleItem(){
   div.className='b-item';
   div.innerHTML=`
     <div class="form-row">
-      <div class="form-group"><label class="form-label">品牌 <span class="req">*</span></label><input class="form-input bi-brand" placeholder="如 兰蔻"></div>
+      <div class="form-group"><label class="form-label">品牌</label><input class="form-input bi-brand" placeholder="留空则用统一品牌"></div>
       <div class="form-group"><label class="form-label">产品名 <span class="req">*</span></label><input class="form-input bi-name" placeholder="如 小黑瓶"></div>
     </div>
     <div class="form-row-3">
@@ -1230,6 +1288,21 @@ function addBundleItem(){
   div.querySelector('.bi-del').onclick=()=>{div.remove();updateBundleCalc()};
   div.querySelectorAll('input').forEach(i=>i.addEventListener('input',updateBundleCalc));
   updateBundleCalc();
+  return div;
+}
+function copyBundleItem(){
+  const items=[...document.querySelectorAll('#b-items .b-item')];
+  if(!items.length){toast('还没有可复制的条目');return}
+  const src=items[items.length-1];
+  const div=addBundleItem();
+  div.querySelector('.bi-brand').value=src.querySelector('.bi-brand').value;
+  div.querySelector('.bi-name').value=src.querySelector('.bi-name').value;
+  div.querySelector('.bi-cat').value=src.querySelector('.bi-cat').value;
+  div.querySelector('.bi-spec').value=src.querySelector('.bi-spec').value;
+  div.querySelector('.bi-ref').value=src.querySelector('.bi-ref').value;
+  updateBundleCalc();
+  div.scrollIntoView({behavior:'smooth',block:'nearest'});
+  toast('已复制上一条，改改就能用');
 }
 function updateBundleCalc(){
   const total=Number($('#b-total').value)||0;
@@ -1248,6 +1321,7 @@ function updateBundleCalc(){
   }else{sm.style.display='none'}
 }
 function openBundleForm(){
+  $('#b-brand').value='';
   $('#b-name').value='';
   $('#b-date').value=today();
   $('#b-total').value='';
@@ -1265,14 +1339,16 @@ function saveBundle(){
   if(!total||total<=0){toast('请填写套装总价');return}
   const items=[...document.querySelectorAll('#b-items .b-item')];
   if(items.length<2){toast('套装至少需要 2 件产品');return}
+  const globalBrand=$('#b-brand').value.trim();
   const parsed=items.map(it=>({
-    brand:it.querySelector('.bi-brand').value.trim(),
+    brand:it.querySelector('.bi-brand').value.trim()||globalBrand,
     name:it.querySelector('.bi-name').value.trim(),
     category:it.querySelector('.bi-cat').value,
     spec:it.querySelector('.bi-spec').value.trim(),
     ref:Number(it.querySelector('.bi-ref').value)||0
   }));
-  if(parsed.some(x=>!x.brand||!x.name)){toast('每件都要填品牌和产品名');return}
+  if(parsed.some(x=>!x.name)){toast('每件都要填产品名');return}
+  if(parsed.some(x=>!x.brand)){toast('品牌栏留空时请先填顶部的「统一品牌」');return}
   if(parsed.some(x=>x.ref<=0)){toast('每件都要填单买参考价（用于分摊）');return}
   const sum=parsed.reduce((s,x)=>s+x.ref,0);
   const label=name?name+(channel?'·'+channel:''):(channel||'套装');
@@ -1294,6 +1370,7 @@ function saveBundle(){
   toast('已生成 '+parsed.length+' 条套装记录（金额已分摊）');
 }
 $('#b-add').onclick=addBundleItem;
+$('#b-copy').onclick=copyBundleItem;
 $('#b-cancel').onclick=()=>$('#bundleModal').classList.remove('show');
 $('#bundleClose').onclick=()=>$('#bundleModal').classList.remove('show');
 $('#b-save').onclick=saveBundle;
