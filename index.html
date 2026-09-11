@@ -31,6 +31,23 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;color:var(--ink2);background:var(--card);box-shadow:var(--shadow);transition:.2s}
 .tab.active{background:var(--primary);color:#fff}
+/* v0.3.7 品牌统计表 */
+.bs-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -2px;padding:0 2px}
+.bs-wrap::-webkit-scrollbar{display:none}
+.bs-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
+.bs-tbl th,.bs-tbl td{padding:7px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+.bs-tbl th:first-child,.bs-tbl td:first-child{text-align:left}
+.bs-tbl thead th{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.3px;border-bottom:1.5px solid var(--line)}
+.bs-tbl tfoot td{font-weight:700;color:var(--ink);border-top:1.5px solid var(--line);border-bottom:none;background:var(--primary-soft)}
+.bs-tbl tfoot td:first-child{border-radius:0 0 0 8px}
+.bs-tbl tfoot td:last-child{border-radius:0 0 8px 0}
+.bs-jump{font:inherit;font-weight:600;color:var(--ink);background:none;padding:0;text-align:left;border-bottom:1px dashed var(--ink3)}
+.bs-jump:active{opacity:.6}
+.bs-brand{font-weight:600;color:var(--ink)}
+.bs-sum{font-weight:600;color:var(--primary2)}
+.bs-zero{color:var(--ink3);opacity:.45}
+.bs-bar{display:inline-block;height:5px;border-radius:3px;background:var(--primary);vertical-align:middle;margin-right:6px}
+.bs-empty{text-align:center;color:var(--ink3);font-size:12px;padding:14px 0}
 /* backup bar */
 .backup-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .btn{padding:9px 14px;border-radius:10px;font-size:13px;font-weight:500;background:var(--card);color:var(--ink2);box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:5px;transition:.15s}
@@ -241,6 +258,10 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="iB6SoDZpXm8a4JK9FfSreG"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" data-page-node-id="lXfNyOfKWXqGL4WVEy5ZYU"/><polyline points="7,10 12,15 17,10" data-page-node-id="QVuKlR9PtDpmUgvFBV8eeP"/><line x1="12" y1="15" x2="12" y2="3" data-page-node-id="HdZQH04UIZ3yRZmykhm8Lt"/></svg>
       导出备份
     </button>
+    <button class="btn" id="exportXlsxBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+      导出 Excel
+    </button>
     <button class="btn" id="importBtn" data-page-node-id="c9d03DfXvLkxeuHuOgc1qk">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="RSttR4wwGayBJQZvdvaWyL"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" data-page-node-id="1CuQSDXvKgyKPDQwHo6dtY"/><polyline points="17,15 12,10 7,15" data-page-node-id="hNw5ClMZ6Oc6q4l9QEx1st"/><line x1="12" y1="10" x2="12" y2="22" data-page-node-id="kxKDgM98qtBQwwWrgPTzFR"/></svg>
       导入恢复
@@ -337,6 +358,12 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
     <div class="panel" data-page-node-id="ZnKDjkOJqwHNuHuWzj5d6h">
       <div class="chart-title" data-page-node-id="FbNs55rHLC3mYX8ENXWjoB">使用状态</div>
       <div class="chart-block" id="statusChart" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap" data-page-node-id="jNKtVzWPmULJwDvIcIbaLG"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">品牌统计</div>
+      <div style="font-size:11px;color:var(--ink3);margin:-4px 0 8px">按品牌汇总件数与金额，并展开各使用状态的分布；点品牌名可跳到「产品档案」看该品牌明细</div>
+      <div class="filter-bar" id="brandStatsBar" style="margin-bottom:10px"></div>
+      <div class="bs-wrap" id="brandStats"></div>
     </div>
   </div>
 
@@ -512,6 +539,7 @@ let filterCat='all';
 let reviewSeason='all';
 let reviewScore='all';
 let searchKw='';
+let brandSort='amount';   // v0.3.7 品牌统计排序：amount 金额 / count 件数 / name 品牌名
 let confirmCb=null;
 let confirmAltCb=null;
 
@@ -816,6 +844,217 @@ function productCard(p){
   `;
 }
 
+// ================= v0.3.7 · Excel(.xlsx) 导出（零依赖） =================
+// .xlsx 本质是一个 ZIP，内部是若干 XML。ZIP 规范允许「仅存储、不压缩」(method=0)，
+// 因此不需要 deflate 库：自行拼 ZIP 容器 + 最小 OOXML 即可产出真正的 .xlsx，
+// 仍保持单文件、零依赖、可离线。不用 CSV 是因为中文要靠 BOM 兜底，且无法一次导出多张表。
+const XL_CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0}return t})();
+function xlCrc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=XL_CRC[(c^b[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+const xlEnc=s=>new TextEncoder().encode(s);
+const xlU16=v=>[v&0xFF,(v>>>8)&0xFF];
+const xlU32=v=>[v&0xFF,(v>>>8)&0xFF,(v>>>16)&0xFF,(v>>>24)&0xFF];
+// 组装 ZIP：每个条目仅存储（method=0），无压缩、无数据描述符
+function zipStore(files){
+  const parts=[],cd=[],d=new Date();
+  const tm=((d.getHours()<<11)|(d.getMinutes()<<5)|((d.getSeconds()/2)|0))&0xFFFF;
+  const dt=((((d.getFullYear()-1980)&0x7F)<<9)|(((d.getMonth()+1)&0xF)<<5)|(d.getDate()&0x1F))&0xFFFF;
+  let off=0;
+  files.forEach(f=>{
+    const nm=xlEnc(f.name),data=f.data,crc=xlCrc32(data);
+    const lh=new Uint8Array([].concat([0x50,0x4B,0x03,0x04],xlU16(20),xlU16(0),xlU16(0),xlU16(tm),xlU16(dt),xlU32(crc),xlU32(data.length),xlU32(data.length),xlU16(nm.length),xlU16(0)));
+    parts.push(lh,nm,data);
+    cd.push({nm,crc,size:data.length,off});
+    off+=lh.length+nm.length+data.length;
+  });
+  const cdParts=[];let cdSize=0;
+  cd.forEach(e=>{
+    const h=new Uint8Array([].concat([0x50,0x4B,0x01,0x02],xlU16(20),xlU16(20),xlU16(0),xlU16(0),xlU16(tm),xlU16(dt),xlU32(e.crc),xlU32(e.size),xlU32(e.size),xlU16(e.nm.length),xlU16(0),xlU16(0),xlU16(0),xlU16(0),xlU32(0),xlU32(e.off)));
+    cdParts.push(h,e.nm);cdSize+=h.length+e.nm.length;
+  });
+  const eocd=new Uint8Array([].concat([0x50,0x4B,0x05,0x06],xlU16(0),xlU16(0),xlU16(cd.length),xlU16(cd.length),xlU32(cdSize),xlU32(off),xlU16(0)));
+  return new Blob(parts.concat(cdParts,[eocd]),{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function xlColName(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26}return s}
+// 去掉 XML 非法控制字符（否则 Excel 会报「无法读取」），再转义实体
+function xlEsc(v){return String(v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
+// 单元格写成 [值, 样式号]；数字走 <v>，文本走内联字符串（省掉 sharedStrings 这一整块）
+function xlSheet(rows,widths){
+  const cols=(widths&&widths.length)?('<cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols>'):'';
+  const body=rows.map((row,ri)=>{
+    let cells='';
+    row.forEach((raw,ci)=>{
+      const cell=Array.isArray(raw)?raw:[raw];
+      const v=cell[0],st=cell[1]||0;
+      if(v===null||v===undefined||v==='')return;
+      const ref=xlColName(ci)+(ri+1),sa=st?(' s="'+st+'"'):'';
+      cells+=(typeof v==='number'&&isFinite(v))
+        ?('<c r="'+ref+'"'+sa+'><v>'+v+'</v></c>')
+        :('<c r="'+ref+'"'+sa+' t="inlineStr"><is><t xml:space="preserve">'+xlEsc(v)+'</t></is></c>');
+    });
+    return '<row r="'+(ri+1)+'">'+cells+'</row>';
+  }).join('');
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+cols+'<sheetData>'+body+'</sheetData></worksheet>';
+}
+// 样式号：1 表头（底色+白字）、2 金额、3 合计金额、4 合计文本/件数
+const XL_H=1,XL_M=2,XL_TM=3,XL_TN=4;
+const xh=v=>[v,XL_H],xm=v=>[v,XL_M],xtm=v=>[v,XL_TM],xtn=v=>[v,XL_TN];
+const XL_STYLES='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+ +'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+ +'<numFmts count="1"><numFmt numFmtId="164" formatCode="\u00a5#,##0.00"/></numFmts>'
+ +'<fonts count="3">'
+ +'<font><sz val="11"/><name val="\u7b49\u7ebf"/><charset val="134"/></font>'
+ +'<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="\u7b49\u7ebf"/><charset val="134"/></font>'
+ +'<font><b/><sz val="11"/><color rgb="FF9A6638"/><name val="\u7b49\u7ebf"/><charset val="134"/></font>'
+ +'</fonts>'
+ +'<fills count="3">'
+ +'<fill><patternFill patternType="none"/></fill>'
+ +'<fill><patternFill patternType="gray125"/></fill>'
+ +'<fill><patternFill patternType="solid"><fgColor rgb="FFC08552"/><bgColor indexed="64"/></patternFill></fill>'
+ +'</fills>'
+ +'<borders count="2">'
+ +'<border><left/><right/><top/><bottom/><diagonal/></border>'
+ +'<border><left style="thin"><color rgb="FFE0D8D0"/></left><right style="thin"><color rgb="FFE0D8D0"/></right><top style="thin"><color rgb="FFE0D8D0"/></top><bottom style="thin"><color rgb="FFE0D8D0"/></bottom><diagonal/></border>'
+ +'</borders>'
+ +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+ +'<cellXfs count="5">'
+ +'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+ +'<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>'
+ +'<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>'
+ +'<xf numFmtId="164" fontId="2" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>'
+ +'<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>'
+ +'</cellXfs>'
+ +'<cellStyles count="1"><cellStyle name="\u5e38\u89c4" xfId="0" builtinId="0"/></cellStyles>'
+ +'</styleSheet>';
+function xlsxBlob(sheets){
+  const files=[],n=sheets.length;
+  files.push({name:'[Content_Types].xml',data:xlEnc('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>')});
+  files.push({name:'_rels/.rels',data:xlEnc('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')});
+  files.push({name:'xl/workbook.xml',data:xlEnc('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map((s,i)=>'<sheet name="'+xlEsc(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('')+'</sheets></workbook>')});
+  files.push({name:'xl/_rels/workbook.xml.rels',data:xlEnc('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('')+'<Relationship Id="rId'+(n+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')});
+  files.push({name:'xl/styles.xml',data:xlEnc(XL_STYLES)});
+  sheets.forEach((s,i)=>files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:xlEnc(xlSheet(s.rows,s.widths))}));
+  return zipStore(files);
+}
+const REPURCHASE_TXT={yes:'\u60f3\u56de\u8d2d',maybe:'\u89c2\u671b',no:'\u4e0d\u56de\u8d2d'};
+// —— 品牌聚合：件数 / 金额，并按使用状态拆开（与页面表格、Excel 共用同一份口径）——
+function brandAgg(){
+  const m=new Map();
+  products.forEach(p=>{
+    const br=(p.brand||'').trim()||'（未填品牌）';
+    let o=m.get(br);
+    if(!o){o={brand:br,n:0,sum:0,cnt:{},amt:{}};STATUS.forEach(x=>{o.cnt[x.k]=0;o.amt[x.k]=0});m.set(br,o)}
+    const k=calcStatus(p),v=Number(p.price)||0;
+    o.n++;o.sum+=v;o.cnt[k]=(o.cnt[k]||0)+1;o.amt[k]=(o.amt[k]||0)+v;
+  });
+  return [...m.values()];
+}
+function categoryAgg(){
+  const m=new Map();
+  products.forEach(p=>{
+    const c=p.category||'其他';
+    const o=m.get(c)||{cat:c,n:0,sum:0};
+    o.n++;o.sum+=Number(p.price)||0;m.set(c,o);
+  });
+  return [...m.values()].sort((a,b)=>b.sum-a.sum||b.n-a.n);
+}
+const xlPct=(v,t)=>t?(Math.round(v/t*1000)/10):0;
+// —— 生成并下载 .xlsx（4 张表：明细 / 品牌 / 状态 / 品类）——
+function exportXlsx(){
+  const total=products.reduce((a,p)=>a+(Number(p.price)||0),0);
+  const totalN=products.length;
+  // Sheet1 产品明细
+  const det=[['品牌','产品名','品类','规格','使用状态','库存余量%','购买金额','购买日期','开封日期','空瓶日期','到期日期','保质期','评分','回购意愿','适合季节','套装/礼盒','录入日期','使用感受'].map(xh)];
+  products.forEach(p=>{
+    det.push([
+      p.brand||'',p.name||'',p.category||'',p.spec||'',statusInfo(calcStatus(p)).t,
+      (p.stock===undefined||p.stock===null||p.stock==='')?'':Number(p.stock),
+      xm(Number(p.price)||0),
+      p.buyDate?fmtDate(p.buyDate):'',p.openDate?fmtDate(p.openDate):'',p.emptyDate?fmtDate(p.emptyDate):'',
+      p.expireDate?fmtDate(p.expireDate):'',p.shelfLife||'',
+      p.score?Number(p.score):'',REPURCHASE_TXT[p.repurchase]||'',
+      (p.seasons||[]).join('/'),p.bundle||'',
+      p.createdAt?fmtDate(p.createdAt):'',p.feeling||''
+    ]);
+  });
+  det.push([xtn('合计'),xtn(totalN),xtn(''),xtn(''),xtn(''),xtn(''),xtm(total)]);
+  const sa=statusAgg(products);
+  // Sheet2 品牌统计
+  const bs=[['品牌','件数'].concat(STATUS.map(x=>x.t)).concat(['总金额','均价','占比%']).map(xh)];
+  const bsArr=brandAgg().sort((a,b)=>b.sum-a.sum||b.n-a.n);
+  bsArr.forEach(o=>{
+    bs.push([o.brand,o.n].concat(STATUS.map(x=>o.cnt[x.k])).concat([xm(o.sum),xm(o.sum/o.n),xlPct(o.sum,total)]));
+  });
+  bs.push([xtn('合计'),xtn(totalN)].concat(STATUS.map(x=>xtn(sa[x.k].n))).concat([xtm(total),xtm(totalN?total/totalN:0),xtn(100)]));
+  // Sheet3 状态统计
+  const ss=[['使用状态','件数','金额','占比%'].map(xh)];
+  STATUS.forEach(x=>{ss.push([x.t,sa[x.k].n,xm(sa[x.k].sum),xlPct(sa[x.k].sum,total)])});
+  ss.push([xtn('合计'),xtn(totalN),xtm(total),xtn(100)]);
+  // Sheet4 品类统计
+  const cs=[['品类','件数','金额','占比%'].map(xh)];
+  categoryAgg().forEach(o=>{cs.push([o.cat,o.n,xm(o.sum),xlPct(o.sum,total)])});
+  cs.push([xtn('合计'),xtn(totalN),xtm(total),xtn(100)]);
+
+  const blob=xlsxBlob([
+    {name:'产品明细',rows:det,widths:[12,22,13,14,10,11,11,12,12,12,12,14,7,10,11,16,12,36]},
+    {name:'品牌统计',rows:bs,widths:[16,8,8,8,8,8,12,11,9]},
+    {name:'状态统计',rows:ss,widths:[12,8,12,9]},
+    {name:'品类统计',rows:cs,widths:[16,8,12,9]}
+  ]);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='梳妆台_'+today()+'.xlsx';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('已导出 Excel · 4 张表（'+totalN+' 条）');
+}
+// —— 品牌统计面板 ——
+function renderBrandStats(){
+  const bar=$('#brandStatsBar'),box=$('#brandStats');
+  if(!bar||!box)return;
+  const sorts=[{k:'amount',t:'按金额'},{k:'count',t:'按件数'},{k:'name',t:'按品牌名'}];
+  bar.innerHTML=sorts.map(x=>`<button class="filter-opt ${brandSort===x.k?'active':''}" data-bs="${x.k}">${x.t}</button>`).join('');
+  bar.querySelectorAll('[data-bs]').forEach(btn=>{
+    btn.onclick=()=>{brandSort=btn.dataset.bs;renderBrandStats()};
+  });
+  const arr=brandAgg();
+  if(!arr.length){box.innerHTML='<div class="bs-empty">暂无品牌数据，先添加产品</div>';return}
+  arr.sort((a,b)=>{
+    if(brandSort==='name')return a.brand.localeCompare(b.brand,'zh');
+    if(brandSort==='count')return b.n-a.n||b.sum-a.sum;
+    return b.sum-a.sum||b.n-a.n;
+  });
+  const total=arr.reduce((a,o)=>a+o.sum,0);
+  const maxSum=Math.max(...arr.map(o=>o.sum),1);
+  const head='<tr>'+['品牌','件数'].concat(STATUS.map(x=>x.t)).concat(['总金额','占比']).map(t=>'<th>'+t+'</th>').join('')+'</tr>';
+  const body=arr.map(o=>{
+    const isReal=o.brand!=='（未填品牌）';
+    const nameCell=isReal
+      ?('<button class="bs-jump" data-brand="'+String(o.brand).replace(/"/g,'&quot;')+'">'+o.brand+'</button>')
+      :('<span class="bs-brand" style="color:var(--ink3)">'+o.brand+'</span>');
+    const stCells=STATUS.map(x=>{
+      const n=o.cnt[x.k]||0;
+      return '<td class="'+(n?'':'bs-zero')+'" title="'+x.t+' '+fmtSum(o.amt[x.k]||0)+'">'+n+'</td>';
+    }).join('');
+    const pct=total?(o.sum/total*100):0;
+    return '<tr><td>'+nameCell+'</td><td class="bs-n">'+o.n+'</td>'+stCells
+      +'<td class="bs-sum">'+fmtSum(o.sum)+'</td>'
+      +'<td><span class="bs-bar" style="width:'+Math.max(2,Math.round(o.sum/maxSum*42))+'px"></span>'+pct.toFixed(1)+'%</td></tr>';
+  }).join('');
+  const foot='<tr><td>合计</td><td>'+products.length+'</td>'
+    +STATUS.map(x=>'<td>'+arr.reduce((a,o)=>a+(o.cnt[x.k]||0),0)+'</td>').join('')
+    +'<td>'+fmtSum(total)+'</td><td>100%</td></tr>';
+  box.innerHTML='<table class="bs-tbl"><thead>'+head+'</thead><tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  box.querySelectorAll('.bs-jump').forEach(btn=>{
+    btn.onclick=()=>{
+      const br=btn.dataset.brand;
+      searchKw=br;filterStatus='all';filterCat='all';
+      const si=$('#searchInput');if(si)si.value=br;
+      switchTab('archive');renderArchive();
+      toast('已按品牌「'+br+'」筛选');
+    };
+  });
+}
+
 function renderDashboard(){
   const using=products.filter(p=>calcStatus(p)==='using').length;
   const sealed=products.filter(p=>calcStatus(p)==='sealed').length;
@@ -832,6 +1071,7 @@ function renderDashboard(){
   renderSpendChart();
   renderCategoryChart();
   renderStatusChart(using,sealed,empty,warning);
+  renderBrandStats();
 }
 
 function renderSpendChart(){
@@ -1334,6 +1574,7 @@ $('#formClose').onclick=closeForm;
 $('#formCancel').onclick=closeForm;
 $('#detailClose').onclick=closeDetail;
 $('#exportBtn').onclick=exportData;
+$('#exportXlsxBtn').onclick=exportXlsx;
 $('#importBtn').onclick=()=>$('#importFile').click();
 $('#importFile').onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''};
 $('#clearBtn').onclick=()=>{
