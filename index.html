@@ -175,7 +175,7 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 .confirm-mask{position:fixed;inset:0;background:rgba(45,38,34,.5);z-index:150;display:none;align-items:center;justify-content:center;padding:24px}
 .confirm-mask.show{display:flex}
 .confirm-box{background:var(--card);border-radius:16px;padding:22px;max-width:320px;width:100%;text-align:center}
-.confirm-box p{font-size:14px;color:var(--ink);margin-bottom:18px;line-height:1.6}
+.confirm-box p{font-size:14px;color:var(--ink);margin-bottom:18px;line-height:1.6;white-space:pre-line}
 .confirm-actions{display:flex;gap:10px}
 .confirm-actions .btn{flex:1;justify-content:center;padding:11px}
 /* search */
@@ -416,6 +416,9 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
         <button class="btn" id="sy-use-cloud" style="justify-content:center">用云端覆盖本机</button>
         <button class="btn" id="sy-use-local" style="justify-content:center">用本机覆盖云端</button>
       </div>
+      <div class="form-row" id="sy-force-row" style="display:none;margin:4px 0 8px">
+        <button class="btn" id="sy-force" style="justify-content:center">仍以本机数据上传（强制）</button>
+      </div>
 
       <div class="sync-code">
         <label class="form-label" style="margin-top:12px">配置串 · 换设备用</label>
@@ -469,6 +472,7 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
     <p id="confirmText" data-page-node-id="BF7Fu1PdwPdGpc58wRlEB4">确定要清空所有数据吗？</p>
     <div class="confirm-actions" data-page-node-id="h3wvhc0CfcCKDM1U81SEbt">
       <button class="btn" id="confirmCancel" data-page-node-id="1wkbZttD6pP6DuSAkZlZzX">取消</button>
+      <button class="btn" id="confirmAlt" style="display:none">覆盖</button>
       <button class="btn btn-primary" id="confirmOk" style="background:var(--rose)" data-page-node-id="46ByUffIQXA8jZTvO7N8Kj">确定</button>
     </div>
   </div>
@@ -492,6 +496,7 @@ let reviewSeason='all';
 let reviewScore='all';
 let searchKw='';
 let confirmCb=null;
+let confirmAltCb=null;
 
 // ---------- utils ----------
 const $=s=>document.querySelector(s);
@@ -1188,9 +1193,14 @@ function openDetail(id){
 function closeDetail(){$('#detailModal').classList.remove('show')}
 
 // ---------- confirm & toast ----------
-function showConfirm(text,cb){
+function showConfirm(text,cb,opts){
+  opts=opts||{};
   $('#confirmText').textContent=text;
   confirmCb=cb;
+  const okBtn=$('#confirmOk'),altBtn=$('#confirmAlt');
+  okBtn.textContent=opts.okText||'确定';
+  if(opts.altText&&opts.altCb){altBtn.textContent=opts.altText;altBtn.style.display='';confirmAltCb=opts.altCb}
+  else{altBtn.style.display='none';confirmAltCb=null}
   $('#confirmMask').classList.add('show');
 }
 function toast(msg){
@@ -1215,15 +1225,22 @@ function importData(file){
     try{
       const data=JSON.parse(e.target.result);
       if(!data.products||!Array.isArray(data.products))throw 0;
-      showConfirm(`将导入 ${data.products.length} 条数据，是否合并到现有数据？`,()=>{
+      const incoming=data.products.map(p=>p.repurchase===undefined?Object.assign({},p,{repurchase:''}):p);
+      const apply=mode=>{
+        if(mode==='replace'){
+          products=incoming.slice();
+          saveData();render();
+          toast('已覆盖为 '+products.length+' 条');
+          return;
+        }
         const existing=new Set(products.map(p=>p.id));
         let added=0;
-        data.products.forEach(p=>{
-          if(p.repurchase===undefined)p.repurchase='';
-          if(!existing.has(p.id)){products.push(p);added++}
-        });
-        saveData();render();toast('已导入 '+added+' 条');
-      });
+        incoming.forEach(p=>{if(!existing.has(p.id)){products.push(p);added++}});
+        saveData();render();toast('已合并 '+added+' 条（共 '+products.length+' 条）');
+      };
+      showConfirm('备份里有 '+incoming.length+' 条。\n合并：保留本机现有数据，只补进没有的。\n覆盖：丢掉本机全部数据，只留备份内容。\n若本机现在还是示例数据，请选「覆盖」。',
+        ()=>apply('merge'),
+        {okText:'合并',altText:'覆盖',altCb:()=>apply('replace')});
     }catch(err){toast('文件格式错误')}
   };
   reader.readAsText(file);
@@ -1260,7 +1277,8 @@ $('#clearBtn').onclick=()=>{
   });
 };
 $('#confirmCancel').onclick=()=>{$('#confirmMask').classList.remove('show');confirmCb=null};
-$('#confirmOk').onclick=()=>{$('#confirmMask').classList.remove('show');if(confirmCb)confirmCb();confirmCb=null};
+$('#confirmAlt').onclick=()=>{$('#confirmMask').classList.remove('show');const f=confirmAltCb;confirmCb=null;confirmAltCb=null;if(f)f()};
+$('#confirmOk').onclick=()=>{$('#confirmMask').classList.remove('show');const f=confirmCb;confirmCb=null;confirmAltCb=null;if(f)f()};
 $('#searchInput').oninput=e=>{searchKw=e.target.value.trim();renderArchive()};
 
 // ---------- price log modal ----------
@@ -1372,6 +1390,15 @@ const DIRTY='wb_dresser_dirty';
 const RO_MIRROR='wb_dresser_ro_mirror';  // 本机这份数据只是云端的只读镜像（未配令牌时拉下来的）
 const SEED_SIG='wb_dresser_seed_sig';    // 示例数据的指纹，用于判断本机是否还是「没动过的示例数据」
 const seedSig=a=>a.length+'|'+a.map(p=>String(p.brand||'')+'/'+String(p.name||'')).join(',');
+// 内置示例数据的固定指纹。无论 localStorage 里是否还留着 SEED_SIG，都能识别出「本机还是示例数据」。
+const DEMO_SIG='8|兰蔻/小黑瓶精华肌底液,雅诗兰黛/DW粉底液,珂润/润浸保湿面霜,植村秀/砍刀眉笔,理肤泉/B5修复面霜,植村秀/砍刀眉笔,薇诺娜/舒护特护霜,薇诺娜/清透防晒乳';
+function isDemoData(list){
+  if(!Array.isArray(list)||!list.length)return false;
+  const sig=seedSig(list);
+  if(sig===DEMO_SIG)return true;
+  const saved=localStorage.getItem(SEED_SIG);
+  return !!saved&&sig===saved;
+}
 // 预置仓库：这里写死默认值，换仓库在「同步设置」里改，会存进本机 localStorage 覆盖默认值
 const DEF={platform:'github',owner:'puzzle3428',repo:'desser'};
 const defBranch=p=>p==='gitee'?'master':'main';
@@ -1472,8 +1499,15 @@ async function giteePull(){
   const c=getCfg();if(!c.owner||!c.repo)return false;
   return applyRemote(await giteeFetchRemote());
 }
-async function giteePush(showToast){
+async function giteePush(showToast,force){
   const c=getCfg();if(!c.token){updateSync();return}
+  // 安全闸：内置示例数据绝不允许被推到云端。
+  // v0.3.2 曾因首次同步时本机只有示例数据，把它推成了云端「共同真相」，导致另一端真实数据被反复覆盖。
+  if(!force&&isDemoData(products)){
+    updateSync(false,'本机为示例数据，未上传');
+    if(showToast)toast('本机是内置示例数据，已阻止上传');
+    return;
+  }
   const ep=syncEp(c);
   const content='window.__DATA__='+JSON.stringify({products})+';\n';
   const enc=btoa(unescape(encodeURIComponent(content)));
@@ -1516,6 +1550,12 @@ async function initSync(){
     return;
   }
   updateSync();
+  // 首次接入保护：本机已有真实数据、却从未与云端同步过（既无脏标记、也无同步时间）时，
+  // 绝不允许云端数据静默覆盖本机。旧版本写入的数据没有脏标记，正是「一打开就被盖回初始设置」的成因。
+  if(!localStorage.getItem(DIRTY)&&!localStorage.getItem(LAST_SYNC)&&!canReadOnlyMirror()){
+    localStorage.setItem(DIRTY,'1');
+    toast('本机已有数据且从未同步过，已按「本机为准」处理，未被云端覆盖');
+  }
   // 本机有还没推上去的改动 → 以本机为准直接回推，防止被云端旧数据盖掉
   if(localStorage.getItem(DIRTY)&&products.length){await giteePush(false);return}
   const pulled=await giteePull();
@@ -1573,6 +1613,7 @@ function openSyncSettings(){
   const c=getCfg();
   conflictRemote=null;
   $('#sy-conflict').style.display='none';
+  $('#sy-force-row').style.display='none';
   $('#sy-platform').value=c.platform;
   $('#sy-owner').value=c.owner;
   $('#sy-repo').value=c.repo;
@@ -1603,7 +1644,7 @@ $('#sy-test').onclick=async()=>{
   try{
     const ep=syncEp(cfg);
     const r=await fetch(ep.api+ep.get,{headers:ep.headers});
-    if(r.ok){syStatus('连接成功 ✅ 仓库可读写。点「保存并同步」即可','ok')}
+    if(r.ok){syStatus('连接成功 ✅ 仓库可读。\n（此测试只验证读取权限；写入是否可用，以「保存并同步」的结果为准）','ok')}
     else if(r.status===404){syStatus('已连上服务，但仓库或文件不存在。\n若仓库名写错了请改正；若是刚建的空仓库，直接点「保存并同步」，会自动创建 data.js','warn')}
     else if(r.status===401||r.status===403){syStatus('令牌无效或权限不足（HTTP '+r.status+'）。请重新生成令牌并勾选对应权限','err')}
     else{syStatus('连接异常：HTTP '+r.status,'err')}
@@ -1621,8 +1662,14 @@ $('#sy-save').onclick=async()=>{
 
   const remote=await giteeFetchRemote();
 
-  // 云端还没有数据 → 直接把本机推上去
+  // 云端还没有数据 → 直接把本机推上去（但示例数据必须先拦下）
   if(!remote||!remote.products.length){
+    if(isDemoData(products)){
+      $('#sy-conflict').style.display='none';
+      $('#sy-force-row').style.display='grid';
+      syStatus('⚠️ 云端没有数据，但本机现在是内置示例数据（'+products.length+' 条）。\n上传它就等于把假数据定成两台设备共用的真相，另一端真实数据会被它覆盖。\n正确做法：先在本机点「清空」，再用「导入恢复」→「覆盖」导入你的真实备份，然后回到这里点「保存并同步」。\n确实要用示例数据，点下面的按钮。','warn');
+      return;
+    }
     await giteePush(false);
     const ok=$('#syncText').textContent.indexOf('已同步')>-1;
     syStatus(ok
@@ -1640,15 +1687,23 @@ $('#sy-save').onclick=async()=>{
 
   // 两边都有数据 → 不擅自覆盖，交给用户选
   conflictRemote=remote;
-  syStatus('检测到两边都有数据：\n云端 '+remote.products.length+' 条 · 本机 '+products.length+' 条\n系统不会自动覆盖，请在下面选择以哪边为准','warn');
+  const rDemo=isDemoData(remote.products),lDemo=isDemoData(products);
+  let tip='检测到两边都有数据：\n云端 '+remote.products.length+' 条'+(rDemo?'（⚠️ 内置示例数据）':'')+' · 本机 '+products.length+' 条'+(lDemo?'（⚠️ 内置示例数据）':'');
+  if(rDemo&&!lDemo)tip+='\n⚠️ 云端那份是示例数据，本机才是你的真实数据。请点「用本机覆盖云端」，选错会丢掉本机数据。';
+  else if(!rDemo&&lDemo)tip+='\n⚠️ 本机这份是示例数据，云端才是真实数据。请点「用云端覆盖本机」。';
+  else tip+='\n系统不会自动覆盖，请确认后再选。';
+  syStatus(tip,'warn');
   $('#sy-conflict').style.display='grid';
+  $('#sy-force-row').style.display='none';
 };
 
 $('#sy-use-cloud').onclick=()=>{
   if(!conflictRemote){syStatus('云端数据已失效，请重新点「保存并同步」','err');return}
-  applyRemote(conflictRemote);render();conflictRemote=null;
-  $('#sy-conflict').style.display='none';
-  syStatus('已用云端数据覆盖本机：'+products.length+' 条 ✅','ok');
+  const cov=conflictRemote;
+  // 这是本条流程里唯一会丢本机数据的动作，必须二次确认，避免误点
+  showConfirm('确定用云端数据覆盖本机吗？\n本机现有 '+products.length+' 条将被替换为云端的 '+cov.products.length+' 条。\n本机原有数据不会自动备份，覆盖后无法从本页恢复。',
+    ()=>{applyRemote(cov);render();conflictRemote=null;$('#sy-conflict').style.display='none';syStatus('已用云端数据覆盖本机：'+products.length+' 条 ✅','ok');},
+    {okText:'确定覆盖'});
 };
 $('#sy-use-local').onclick=async()=>{
   $('#sy-conflict').style.display='none';
@@ -1659,6 +1714,16 @@ $('#sy-use-local').onclick=async()=>{
   conflictRemote=null;
 };
 
+$('#sy-force').onclick=async()=>{
+  const cfg=readSyncForm();
+  if(!cfg.owner||!cfg.repo||!cfg.token){syStatus('请先把仓库名与访问令牌填好','err');return}
+  setCfg(cfg);
+  $('#sy-force-row').style.display='none';
+  syStatus('正在以本机为准上传…','busy');
+  await giteePush(false,true);
+  const ok=$('#syncText').textContent.indexOf('已同步')>-1;
+  syStatus(ok?('已把本机 '+products.length+' 条上传到云端 ✅'):('上传失败：'+$('#syncText').textContent+'\n常见原因：令牌没有写权限，或网络被拦截'),ok?'ok':'err');
+};
 $('#sy-clear').onclick=()=>{
   setCfg({platform:$('#sy-platform').value,owner:'',repo:'',branch:'',token:''});
   localStorage.removeItem(MIG_V3);
