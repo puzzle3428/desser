@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<html lang="zh-CN" data-page-node-id="JSCIkViaaRqQ6n631CvhzM">
+<head data-page-node-id="ELuNPoRCtfl29cERkjcd7g">
+<meta charset="UTF-8" data-page-node-id="wu8whHFC3Pda5BayFSmAIP">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="Plv82Dn1XrPoTsvwjQRXA7">
 <title>梳妆台 · 护肤彩妆管理</title>
 <!-- 本工作台由 WorkBuddy 小台搭建，本地 localStorage 存储 + 在线链接部署 -->
 <style>
@@ -98,6 +98,9 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 .trend.flat{background:#f0ece6;color:var(--ink3)}
 .price-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:12px}
 .price-row:last-child{border-bottom:none}
+.price-edit{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--primary2);background:var(--primary-soft);border-radius:8px;padding:2px 8px}
+.price-edit:active{transform:scale(.94)}
+.price-tip{font-size:11px;color:var(--ink3);margin-top:8px}
 .rebuy-act{padding:9px 14px;border-radius:9px;font-size:12px;font-weight:600;background:var(--primary-soft);color:var(--primary2);flex-shrink:0;transition:.15s}
 .rebuy-act:active{transform:scale(.95)}
 /* bundle */
@@ -130,6 +133,17 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 .form-select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a89e94' stroke-width='2.5'><polyline points='6,9 12,15 18,9'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+/* sync settings modal */
+.sync-tip{font-size:11.5px;line-height:1.7;color:var(--ink2);background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:14px}
+.sync-help{font-size:11px;line-height:1.8;color:var(--ink3);margin:-6px 0 10px}
+.sync-status{font-size:12px;line-height:1.65;border-radius:10px;white-space:pre-wrap;word-break:break-all}
+.sync-status.show{padding:10px 12px;margin-bottom:6px}
+.sync-status.ok{background:#eef6ec;color:#4d7a3c}
+.sync-status.err{background:#fdeaea;color:#b3403f}
+.sync-status.warn{background:#fdf4e3;color:#8a6520}
+.sync-status.busy{background:#f4f1ed;color:var(--ink2)}
+.sync-code-tip{font-size:11px;line-height:1.6;color:var(--ink3);margin:0 0 8px}
+.sync-code textarea{font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
 .season-pick{display:flex;gap:6px;flex-wrap:wrap}
 .season-opt{padding:7px 14px;border-radius:8px;background:#faf8f6;font-size:12px;color:var(--ink2);border:1.5px solid transparent}
 .season-opt.on{background:var(--primary-soft);color:var(--primary2);border-color:var(--primary)}
@@ -193,246 +207,283 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 }
 </style>
 </head>
-<body>
-<div class="app">
+<body data-page-node-id="M8gjfYC5Lw7PvcNRvOiV8W">
+<div class="app" data-page-node-id="HGVaCir7b3JZY0J9bEQxHE">
   <!-- header -->
-  <div class="header">
-    <div class="title-wrap">
-      <h1>梳妆台</h1>
-      <p id="subTitle">护肤品 · 彩妆管理</p>
+  <div class="header" data-page-node-id="m2mxt4kQSG74UFA0x1kHfW">
+    <div class="title-wrap" data-page-node-id="ly65X27RcEZXoT8XfpwrPo">
+      <h1 data-page-node-id="tdIUSnBMNIv9rSWGzf7tbN">梳妆台</h1>
+      <p id="subTitle" data-page-node-id="xzbNLd2LIDEuAOJornkCwe">护肤品 · 彩妆管理</p>
     </div>
-    <div class="sync-badge">
-      <span class="sync-dot"></span><span id="syncText">本地存储</span>
+    <div class="sync-badge" title="点击配置手机 / 电脑同步" style="cursor:pointer;user-select:none" data-page-node-id="2v62ZPVKWKRYwwbFshIqpu">
+      <span class="sync-dot" data-page-node-id="T1p9cpRhfz3IQ7uCfNo2Ld"></span><span id="syncText" data-page-node-id="lYq5k8aXaH4HChYJPrSdCN">本地存储</span>
     </div>
   </div>
 
   <!-- backup bar -->
-  <div class="backup-bar">
-    <button class="btn" id="exportBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  <div class="backup-bar" data-page-node-id="SRgmgseI5HNRzxNGrPsSjy">
+    <button class="btn" id="exportBtn" data-page-node-id="6FMwDrRCEaLqAWv1IiDZOS">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="iB6SoDZpXm8a4JK9FfSreG"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" data-page-node-id="lXfNyOfKWXqGL4WVEy5ZYU"/><polyline points="7,10 12,15 17,10" data-page-node-id="QVuKlR9PtDpmUgvFBV8eeP"/><line x1="12" y1="15" x2="12" y2="3" data-page-node-id="HdZQH04UIZ3yRZmykhm8Lt"/></svg>
       导出备份
     </button>
-    <button class="btn" id="csvBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-      导出Excel
-    </button>
-    <button class="btn" id="importBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,15 12,10 7,15"/><line x1="12" y1="10" x2="12" y2="22"/></svg>
+    <button class="btn" id="importBtn" data-page-node-id="c9d03DfXvLkxeuHuOgc1qk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="RSttR4wwGayBJQZvdvaWyL"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" data-page-node-id="1CuQSDXvKgyKPDQwHo6dtY"/><polyline points="17,15 12,10 7,15" data-page-node-id="hNw5ClMZ6Oc6q4l9QEx1st"/><line x1="12" y1="10" x2="12" y2="22" data-page-node-id="kxKDgM98qtBQwwWrgPTzFR"/></svg>
       导入恢复
     </button>
-    <button class="btn btn-ghost" id="clearBtn" style="margin-left:auto">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    <button class="btn" id="syncNowBtn" data-page-node-id="G0fbxrRovhpJHHKGqE8lKs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="gfi2cp22dZkNs06O5zXflP"><polyline points="23 4 23 10 17 10" data-page-node-id="o7iZuLzPe9cMMByTtmrJRj"/><polyline points="1 20 1 14 7 14" data-page-node-id="CzQB1gcR7Zjp4m7kwGxZPq"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" data-page-node-id="3dFHrMlvuxdpNxwKv4aknb"/></svg>
+      立即同步
+    </button>
+    <button class="btn" id="syncCfgBtn" data-page-node-id="2VE680g6iG5CphR0G7DpAi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="EIsVNnojCswCOxpEXrEGHf"><circle cx="12" cy="12" r="3" data-page-node-id="i1Yo55WA1aaOsBS3vaSZXA"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" data-page-node-id="3tlJAY5DAVFMFzZ9syltFm"/></svg>
+      同步设置
+    </button>
+    <button class="btn btn-ghost" id="clearBtn" style="margin-left:auto" data-page-node-id="eghkftsa1NdbamtYrZiHat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="CodYSDfrkYC36X9DdLFPMr"><polyline points="3,6 5,6 21,6" data-page-node-id="h3VhGmCLmCBrXS4l1f6jUJ"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" data-page-node-id="U5GDXzDvzcYqZq2KgX22u1"/></svg>
       清空
     </button>
-    <input type="file" id="importFile" accept="application/json" style="display:none">
+    <input type="file" id="importFile" accept="application/json" style="display:none" data-page-node-id="dOOMCJoXHrNgLrYabB7Uuj">
   </div>
 
   <!-- tabs -->
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-tab="today">今天要处理</button>
-    <button class="tab" data-tab="archive">产品档案</button>
-    <button class="tab" data-tab="wall">空瓶墙</button>
-    <button class="tab" data-tab="rebuy">回购清单</button>
-    <button class="tab" data-tab="price">价格对比</button>
-    <button class="tab" data-tab="dashboard">看板</button>
-    <button class="tab" data-tab="review">使用感受</button>
+  <div class="tabs" id="tabs" data-page-node-id="BSICYcnkJRANE30IjjGAME">
+    <button class="tab active" data-tab="today" data-page-node-id="7s0LlgNMEs6lG6zxv6h0N4">今天要处理</button>
+    <button class="tab" data-tab="archive" data-page-node-id="7UhbhsQDbhFuOErAZRZ657">产品档案</button>
+    <button class="tab" data-tab="wall" data-page-node-id="wJw1fNn8tuJA02G327c8Ne">空瓶墙</button>
+    <button class="tab" data-tab="rebuy" data-page-node-id="PhVJasEaMNPTEoksGobTZF">回购清单</button>
+    <button class="tab" data-tab="price" data-page-node-id="WKkQrTypNs95ZgE1J0hOPN">价格对比</button>
+    <button class="tab" data-tab="dashboard" data-page-node-id="CJUuZ01HTBJHFHrvlGw2NE">看板</button>
+    <button class="tab" data-tab="review" data-page-node-id="5r4ChcmsNwf7lSI1MvrFbF">使用感受</button>
   </div>
 
   <!-- today view -->
-  <div id="view-today" class="view">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+  <div id="view-today" class="view" data-page-node-id="lpkpT2tfLcTWCKbJhWKeU9">
+    <div class="section-title" data-page-node-id="pkPwbe0Ssx4dUyZQffxT9g">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="zbm2F2R8AIqhfdxcp28KUn"><circle cx="12" cy="12" r="10" data-page-node-id="9ujFv7sAWIt4BiRWpU9sMs"/><polyline points="12,6 12,12 16,14" data-page-node-id="t1YE2p1j1xQxeoRcEqK9q0"/></svg>
       今日待办
     </div>
-    <div class="today-card" id="todayList"></div>
+    <div class="today-card" id="todayList" data-page-node-id="IcBApSrdM70oV6oZZiHDrI"></div>
   </div>
 
   <!-- archive view -->
-  <div id="view-archive" class="view" style="display:none">
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" placeholder="搜索品牌、产品名、品类...">
+  <div id="view-archive" class="view" style="display:none" data-page-node-id="G61KYVA3GfHDWq1IyhfwJG">
+    <div class="search-box" data-page-node-id="abTWb4LNVKket0S1adNVbQ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="2uF2zyqVGPvbAwKdBwpu1x"><circle cx="11" cy="11" r="8" data-page-node-id="v37WgW1GxuOK5J4x90rugi"/><line x1="21" y1="21" x2="16.65" y2="16.65" data-page-node-id="fWwY49gECxF6p2CxcdF3VV"/></svg>
+      <input type="text" id="searchInput" placeholder="搜索品牌、产品名、品类..." data-page-node-id="WqLWOiYS0FQrLWutJDDwEO">
     </div>
-    <div class="filter-bar" id="statusBar"></div>
-    <div class="filter-bar" id="filterBar"></div>
-    <div class="grid" id="archiveGrid"></div>
+    <div class="filter-bar" id="filterBar" data-page-node-id="WdO3DaqDs0hC3HKx5fPoAk"></div>
+    <div class="grid" id="archiveGrid" data-page-node-id="yzt4jIICkJEBR5bywvsMD7"></div>
   </div>
 
   <!-- wall view -->
-  <div id="view-wall" class="view" style="display:none">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2h6M10 2v4l-3 4v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9l-3-4V2"/></svg>
+  <div id="view-wall" class="view" style="display:none" data-page-node-id="3uQThzZ6gPSuxAqE85qjBW">
+    <div class="section-title" data-page-node-id="PkIgwAwbNnbTXFqBzYBxRD">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="SL78ximNQLZx9gl2M4KiiG"><path d="M9 2h6M10 2v4l-3 4v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9l-3-4V2" data-page-node-id="Q6he1mnPXVYw65437lCSwI"/></svg>
       空瓶墙 · 用完的都值得纪念
     </div>
-    <div class="today-card" style="margin-bottom:12px"><div class="wall-stats" id="wallStats"></div></div>
-    <div class="grid" id="wallGrid"></div>
+    <div class="today-card" style="margin-bottom:12px" data-page-node-id="4fsEIIgJugnp0eqpETDC5C"><div class="wall-stats" id="wallStats" data-page-node-id="Wws4wcQjQWKNx0CFdwZhTw"></div></div>
+    <div class="grid" id="wallGrid" data-page-node-id="G9lF5JOpziOu3PbPOl24gH"></div>
   </div>
 
   <!-- rebuy view -->
-  <div id="view-rebuy" class="view" style="display:none">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+  <div id="view-rebuy" class="view" style="display:none" data-page-node-id="cjAiJAVpyLp2bgfkqFAHnh">
+    <div class="section-title" data-page-node-id="oIgMfIrzb1w6IfGYn7gUQ3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="sQOGSqlcRSbG2adGDZNnIg"><polyline points="23 4 23 10 17 10" data-page-node-id="BscXqpJl0KpADLuzrhmVE2"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" data-page-node-id="DFJ2ozVQjV2UG7pNWZnrIN"/></svg>
       回购清单 · 下次买什么一目了然
     </div>
-    <div class="filter-bar" id="rebuyFilter"></div>
-    <div id="rebuyList"></div>
+    <div class="filter-bar" id="rebuyFilter" data-page-node-id="W5ep1Am0u4VIEAM3Lr6DVa"></div>
+    <div id="rebuyList" data-page-node-id="63lRXQ1eJ4vnsPy3HDiGke"></div>
   </div>
 
   <!-- price view -->
-  <div id="view-price" class="view" style="display:none">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+  <div id="view-price" class="view" style="display:none" data-page-node-id="U2DGEdAdQ4DrBEl6sRcfO3">
+    <div class="section-title" data-page-node-id="DSVNNaogAHJn2ZEUv3HVBQ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="Nt3ZYn9Bt8TczApP0lXuyk"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z" data-page-node-id="ceFuFaR0rgLPFrOiMCVfQA"/><line x1="7" y1="7" x2="7.01" y2="7" data-page-node-id="CwGrgD4wZDgCMU3XAmmgz3"/></svg>
       价格对比 · 买贵了还是买赚了
     </div>
-    <p style="font-size:12px;color:var(--ink3);margin:0 2px 12px">同一产品多次购买或手动记录的价格，自动汇总成价格曲线</p>
-    <div id="priceList"></div>
+    <p style="font-size:12px;color:var(--ink3);margin:0 2px 12px" data-page-node-id="71OXVQPhG7taEzebQxE0RO">价格全部取自「添加产品」时填写的购买金额与日期，不提供单独记价入口；同一产品多次购买会自动汇总成曲线。需要改价请在「产品档案」中编辑对应产品。</p>
+    <div id="priceList" data-page-node-id="T9WlPMQOTv3ELulIhuRYKD"></div>
   </div>
 
   <!-- dashboard view -->
-  <div id="view-dashboard" class="view" style="display:none">
-    <div class="panel">
-      <div class="stat-row" id="statRow"></div>
+  <div id="view-dashboard" class="view" style="display:none" data-page-node-id="UryvfxPPpMVhZKZauI65OV">
+    <div class="panel" data-page-node-id="AukOBJ6e7Q8QJ7pnn9An3z">
+      <div class="stat-row" id="statRow" data-page-node-id="LjfGCqlobwUlGr02FQkP8l"></div>
     </div>
-    <div class="panel">
-      <div class="chart-title">月度开销趋势</div>
-      <div class="chart-block" id="spendChart"></div>
+    <div class="panel" data-page-node-id="XDGr4FkuLJyTDlUBrpCvbZ">
+      <div class="chart-title" data-page-node-id="unDQQTlP3R34Quyeljm6rK">月度开销趋势</div>
+      <div class="chart-block" id="spendChart" data-page-node-id="ZFoYNcOQEKgQqY4cYnuWR3"></div>
     </div>
-    <div class="panel">
-      <div class="chart-title">品类分布</div>
-      <div class="chart-block" id="categoryChart" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"></div>
+    <div class="panel" data-page-node-id="35v34vPo4V9BdmHzAV0wfN">
+      <div class="chart-title" data-page-node-id="j7k5tQIuHhOfSOWs5wh8bv">品类分布</div>
+      <div class="chart-block" id="categoryChart" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap" data-page-node-id="8vfixcWkk8DpWy2FdCue4d"></div>
     </div>
-    <div class="panel">
-      <div class="chart-title">使用状态</div>
-      <div class="chart-block" id="statusChart" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"></div>
+    <div class="panel" data-page-node-id="ZnKDjkOJqwHNuHuWzj5d6h">
+      <div class="chart-title" data-page-node-id="FbNs55rHLC3mYX8ENXWjoB">使用状态</div>
+      <div class="chart-block" id="statusChart" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap" data-page-node-id="jNKtVzWPmULJwDvIcIbaLG"></div>
     </div>
   </div>
 
   <!-- review view -->
-  <div id="view-review" class="view" style="display:none">
-    <div class="filter-bar" id="reviewFilter"></div>
-    <div id="reviewList"></div>
+  <div id="view-review" class="view" style="display:none" data-page-node-id="IhWhTxVs98AXhKIxpNHAA6">
+    <div class="filter-bar" id="reviewFilter" data-page-node-id="4ypJxUSDPOPFgljQVJslbS"></div>
+    <div id="reviewList" data-page-node-id="MXnQdQvY3WGKol8OgkYNdS"></div>
   </div>
 </div>
 
 <!-- fab -->
-<button class="fab" id="fab">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+<button class="fab" id="fab" data-page-node-id="bDwo63GsL3NeCA8SrzGuOq">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" data-page-node-id="JXlje88NVV6LTEXa4y1O6v"><line x1="12" y1="5" x2="12" y2="19" data-page-node-id="GxV0nRS2cVaAeW8N136Fbx"/><line x1="5" y1="12" x2="19" y2="12" data-page-node-id="S3Rx1E3dPVT4N4auDAK7lL"/></svg>
 </button>
 
 <!-- bottom nav -->
-<div class="bottom-nav">
-  <button class="nav-item active" data-nav="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>首页</button>
-  <button class="nav-item" data-nav="archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>档案</button>
-  <button class="nav-item" data-nav="wall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2h6M10 2v4l-3 4v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9l-3-4V2"/></svg>空瓶</button>
-  <button class="nav-item" data-nav="rebuy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>回购</button>
-  <button class="nav-item" data-nav="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>看板</button>
-  <button class="nav-item" data-nav="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>感受</button>
+<div class="bottom-nav" data-page-node-id="FfuNBj1QHiWpiDscDiPUbH">
+  <button class="nav-item active" data-nav="today" data-page-node-id="66KEmxuaNDEHAB2dPjWrc6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="uHkEYmrl9TZtqqfT92tpHq"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" data-page-node-id="lFwTZhjfg8W0BjcKC4kMi4"/><polyline points="9,22 9,12 15,12 15,22" data-page-node-id="Kx4TKh7uaR5s6AC895ipP5"/></svg>首页</button>
+  <button class="nav-item" data-nav="archive" data-page-node-id="lzHJkVTsY5XRGiTIrybFFJ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="cWG6GeAkP3EfKaC8NDkilB"><rect x="3" y="3" width="7" height="7" data-page-node-id="nD4iJpj7bgjBFpbMrV2PkT"/><rect x="14" y="3" width="7" height="7" data-page-node-id="cY8Y3psRXKwwWVEMnuU1ly"/><rect x="3" y="14" width="7" height="7" data-page-node-id="oRoPCS4r8pJVbV5gYjcS0T"/><rect x="14" y="14" width="7" height="7" data-page-node-id="S1yvjsV5gUDaHW6p2PV00f"/></svg>档案</button>
+  <button class="nav-item" data-nav="wall" data-page-node-id="01TilwxQoE24idIoGQFQp2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="v8AN0HKMgJAYCtUFWAeBFB"><path d="M9 2h6M10 2v4l-3 4v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9l-3-4V2" data-page-node-id="PamugAwMWYkUwDZRFKBERD"/></svg>空瓶</button>
+  <button class="nav-item" data-nav="rebuy" data-page-node-id="Ew342y6dd7FeUFyxuSs9pg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="WWqVppPeYrtxhHomKYxCQ8"><polyline points="23 4 23 10 17 10" data-page-node-id="drpyzRZZPEAx1qgUC4vKJS"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" data-page-node-id="aogvcTkruLLbZRCCJLkVb6"/></svg>回购</button>
+  <button class="nav-item" data-nav="dashboard" data-page-node-id="5hwV7AcxJl40nnqM2wWTdF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="MSfK0xxjQLrjfxZAS7ujkU"><line x1="18" y1="20" x2="18" y2="10" data-page-node-id="nZYG2XVyCeP62BrJArTusU"/><line x1="12" y1="20" x2="12" y2="4" data-page-node-id="AL1v1H8RmOucwBCtzZm17g"/><line x1="6" y1="20" x2="6" y2="14" data-page-node-id="53Ed61plcDy5QvA7DJc8w6"/></svg>看板</button>
+  <button class="nav-item" data-nav="review" data-page-node-id="wYj4WGBrqdDR7138AU2lQA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="OiSlFALsA64piCRRRJX9zU"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" data-page-node-id="41PGEKBMmRFKwbbYauCcOi"/><polyline points="14,2 14,8 20,8" data-page-node-id="0WvicGDuvzbyaBJ72XD1G7"/><line x1="16" y1="13" x2="8" y2="13" data-page-node-id="DGDRy3l2wXyGs2DGw9bBVY"/><line x1="16" y1="17" x2="8" y2="17" data-page-node-id="SAUq831dI5uFXFcqzUf6h0"/></svg>感受</button>
 </div>
 
 <!-- form modal -->
-<div class="modal-mask" id="formModal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="formTitle">添加产品</h3>
-      <button class="modal-close" id="formClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<div class="modal-mask" id="formModal" data-page-node-id="sfY9jqCTJmxmmLy34FaiBR">
+  <div class="modal" data-page-node-id="egqpggnfiiCm2EwM313Dmd">
+    <div class="modal-head" data-page-node-id="37nxlTPB05xA8UAh0bukqg">
+      <h3 id="formTitle" data-page-node-id="yBhB8uqwqjjyjYykOKkUeG">添加产品</h3>
+      <button class="modal-close" id="formClose" data-page-node-id="QTKaVpJZWC5pCNZ6ZTrF06"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" data-page-node-id="HSiL1PhIw1SA3iHmI5GacU"><line x1="18" y1="6" x2="6" y2="18" data-page-node-id="Bn96sVzCnaBQwS7CoNGEDY"/><line x1="6" y1="6" x2="18" y2="18" data-page-node-id="Zfti2iqy8jVM8KXA3UjhSf"/></svg></button>
     </div>
-    <div class="modal-body" id="formBody"></div>
-    <div class="modal-foot">
-      <button class="btn" id="formCancel" style="flex:0 0 auto">取消</button>
-      <button class="btn btn-primary" id="formSave">保存</button>
+    <div class="modal-body" id="formBody" data-page-node-id="3jecVgbrn7Z3hT0NdCpYx2"></div>
+    <div class="modal-foot" data-page-node-id="wOYG138O1V19ZRnQ057Urc">
+      <button class="btn" id="formCancel" style="flex:0 0 auto" data-page-node-id="IsofeYh89B0IL7XRdIoAwk">取消</button>
+      <button class="btn btn-primary" id="formSave" data-page-node-id="mbJG0Jdj2FD0tz3dIwTp1G">保存</button>
     </div>
   </div>
 </div>
 
 <!-- detail modal -->
-<div class="modal-mask" id="detailModal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="detailTitle">产品详情</h3>
-      <button class="modal-close" id="detailClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<div class="modal-mask" id="detailModal" data-page-node-id="XTTBSmrKZ18CrTo4UcZCME">
+  <div class="modal" data-page-node-id="yz0nMYTCRW4EHeZvte0N1E">
+    <div class="modal-head" data-page-node-id="76cT6EyedT9SsGPaGNE7vB">
+      <h3 id="detailTitle" data-page-node-id="8TZmQbGI7Ad4jCnBwKoEUY">产品详情</h3>
+      <button class="modal-close" id="detailClose" data-page-node-id="Cb2XqPP9SZ5smuFGgRKeZM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" data-page-node-id="Q8LqiK04iTDee83shiebpq"><line x1="18" y1="6" x2="6" y2="18" data-page-node-id="vju5HDQqbusZGd72HsDC1A"/><line x1="6" y1="6" x2="18" y2="18" data-page-node-id="GJp9kFxoCQi1QjaBNVpthX"/></svg></button>
     </div>
-    <div class="modal-body" id="detailBody"></div>
-    <div class="modal-foot">
-      <button class="btn" id="detailEdit" style="flex:1">编辑</button>
-      <button class="btn" id="detailCopy" style="flex:1">复制一份</button>
-      <button class="btn btn-primary" id="detailDelete" style="flex:1;background:var(--rose)">删除</button>
+    <div class="modal-body" id="detailBody" data-page-node-id="n0PmNHxhIdgzYi4D5XyQe6"></div>
+    <div class="modal-foot" data-page-node-id="DDkGnQl1XSMuTgTOHthuoD">
+      <button class="btn" id="detailEdit" style="flex:1" data-page-node-id="X1GRh7vnKB5AOvhtRVvC5O">编辑</button>
+      <button class="btn btn-primary" id="detailDelete" style="flex:1;background:var(--rose)" data-page-node-id="cWw532DH9A2I1PeAlb3xxN">删除</button>
     </div>
   </div>
 </div>
 
-<!-- price log modal -->
-<div class="modal-mask" id="priceModal">
+<!-- sync settings modal -->
+<div class="modal-mask" id="syncModal">
   <div class="modal">
     <div class="modal-head">
-      <h3 id="priceTitle">记一笔价格</h3>
-      <button class="modal-close" id="priceClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h3>手机 / 电脑 数据同步</h3>
+      <button class="modal-close" id="syncModalClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label class="form-label">日期</label><input class="form-input" id="pf-date" type="date"></div>
-      <div class="form-group"><label class="form-label">价格 ¥ <span class="req">*</span></label><input class="form-input" id="pf-price" type="number" inputmode="decimal" placeholder="0"></div>
-      <div class="form-group"><label class="form-label">渠道 / 备注</label><input class="form-input" id="pf-channel" placeholder="如 天猫双11 / 专柜 / 代购"></div>
+      <div class="sync-tip">数据以 <b>data.js</b> 的形式存放在你自己的代码仓库里，两个设备填同一份配置即可共用一套数据。配置只存在本机浏览器，不会上传到别处。</div>
+
+      <div class="form-group">
+        <label class="form-label">同步服务</label>
+        <select class="form-select" id="sy-platform">
+          <option value="gitee">Gitee（国内访问快，推荐）</option>
+          <option value="github">GitHub</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">用户名 / 组织 <span class="req">*</span></label>
+        <input class="form-input" id="sy-owner" placeholder="如 puzzle3428" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group">
+        <label class="form-label">仓库名 <span class="req">*</span></label>
+        <input class="form-input" id="sy-repo" placeholder="如 desser" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group">
+        <label class="form-label">分支名</label>
+        <input class="form-input" id="sy-branch" placeholder="Gitee 一般是 master，GitHub 一般是 main" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group">
+        <label class="form-label">访问令牌 <span class="req">*</span></label>
+        <input class="form-input" id="sy-token" type="password" placeholder="粘贴令牌，仅保存在本机" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="sync-help" id="sy-help"></div>
+      <div class="sync-status" id="sy-status"></div>
+      <div class="form-row" id="sy-conflict" style="display:none;margin:4px 0 8px">
+        <button class="btn" id="sy-use-cloud" style="justify-content:center">用云端覆盖本机</button>
+        <button class="btn" id="sy-use-local" style="justify-content:center">用本机覆盖云端</button>
+      </div>
+
+      <div class="sync-code">
+        <label class="form-label" style="margin-top:12px">配置串 · 换设备用</label>
+        <p class="sync-code-tip">在电脑上点「生成配置串」，到手机上粘贴进下面的框再点「导入配置」，就不用手打那一长串令牌了。含令牌，请勿外传。</p>
+        <textarea class="form-textarea" id="sy-code" rows="3" placeholder="把另一台设备生成的配置串粘贴到这里" spellcheck="false"></textarea>
+        <div class="form-row" style="margin-top:8px">
+          <button class="btn" id="sy-copy" style="justify-content:center">生成配置串</button>
+          <button class="btn" id="sy-import" style="justify-content:center">导入配置</button>
+        </div>
+      </div>
     </div>
     <div class="modal-foot">
-      <button class="btn" id="priceCancel" style="flex:0 0 auto">取消</button>
-      <button class="btn btn-primary" id="priceSave">保存</button>
+      <button class="btn btn-ghost" id="sy-clear" style="flex:0 0 auto">关闭同步</button>
+      <button class="btn" id="sy-test">测试连接</button>
+      <button class="btn btn-primary" id="sy-save">保存并同步</button>
     </div>
   </div>
 </div>
 
 <!-- bundle modal -->
-<div class="modal-mask" id="bundleModal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3>套装录入 · 自动分摊</h3>
-      <button class="modal-close" id="bundleClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<div class="modal-mask" id="bundleModal" data-page-node-id="lyXe5Es7f2rvfE0A2oHDFH">
+  <div class="modal" data-page-node-id="6H7N3MJvctjNzVbbLgICYw">
+    <div class="modal-head" data-page-node-id="SubE16XshULDRKLZSVLg6y">
+      <h3 data-page-node-id="ClEZd6H3Ie6kNlbUYr3O6z">套装录入 · 自动分摊</h3>
+      <button class="modal-close" id="bundleClose" data-page-node-id="zrl1bBBwYgmWSgb5sCa43Z"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" data-page-node-id="AJ0bmDQp0ompl0uUxH68Jv"><line x1="18" y1="6" x2="6" y2="18" data-page-node-id="VCUPhGkNIOL8woYlJZCzrt"/><line x1="6" y1="6" x2="18" y2="18" data-page-node-id="0B98fQE30NgbQQqOAZ8oO5"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">统一品牌</label><input class="form-input" id="b-brand" placeholder="整套同品牌时填一次，条目留空自动继承"></div>
-        <div class="form-group"><label class="form-label">套装名称</label><input class="form-input" id="b-name" placeholder="如 双11礼盒"></div>
+    <div class="modal-body" data-page-node-id="aqoTZQqMw8AenFtVQMRTPm">
+      <div class="form-row" data-page-node-id="wtnjYO3ij1ss6aJ4gsv3lz">
+        <div class="form-group" data-page-node-id="Q7Oy0jVSwdVdeaBErrtC4W"><label class="form-label" data-page-node-id="9Fz1kOYjXCksxH0aSRXiiZ">套装名称</label><input class="form-input" id="b-name" placeholder="如 双11礼盒" data-page-node-id="r6bxVp9YmFES63pmplsaI0"></div>
+        <div class="form-group" data-page-node-id="oS6eccRkmqOkGBhDKlDTPT"><label class="form-label" data-page-node-id="xwj6rkMNXBmGDlTxw528Fh">购买时间</label><input class="form-input" id="b-date" type="date" data-page-node-id="juQqUtD2NmyKWNJ9E9Dks8"></div>
       </div>
-      <div class="form-row-3">
-        <div class="form-group"><label class="form-label">购买时间</label><input class="form-input" id="b-date" type="date"></div>
-        <div class="form-group"><label class="form-label">套装总价 ¥ <span class="req">*</span></label><input class="form-input" id="b-total" type="number" inputmode="decimal" placeholder="0"></div>
-        <div class="form-group"><label class="form-label">渠道</label><input class="form-input" id="b-channel" placeholder="天猫（选填）"></div>
+      <div class="form-row" data-page-node-id="zxPBGVj0i5pOuFwy3YT66F">
+        <div class="form-group" data-page-node-id="gVgQ4VTMbEGSfCx9JfQWta"><label class="form-label" data-page-node-id="A6DLcW0dM72jeohti5Lumb">套装总价 ¥ <span class="req" data-page-node-id="2yHM7Hrx9iDD1dxBngqlMy">*</span></label><input class="form-input" id="b-total" type="number" inputmode="decimal" placeholder="0" data-page-node-id="VNvUEgvbSzqu10NcgkdHzz"></div>
+        <div class="form-group" data-page-node-id="0a751XtEdeVUkDBrxZIha7"><label class="form-label" data-page-node-id="i3WoHrBS8FfQJoSWqS1of2">渠道</label><input class="form-input" id="b-channel" placeholder="天猫/专柜（选填）" data-page-node-id="tYdwt5H72U4vwvc0negNrb"></div>
       </div>
-      <div id="b-summary" class="b-summary" style="display:none"></div>
-      <div class="form-label" style="margin:4px 0 8px">套装内产品（至少 2 件，填「单买价」用于按比例分摊；同品牌可留空品牌栏）</div>
-      <div id="b-items"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn" id="b-add" style="flex:1;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;color:var(--ink2)">+ 添加一件</button>
-        <button class="btn" id="b-copy" style="flex:1;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;color:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制上一条</button>
-      </div>
+      <div id="b-summary" class="b-summary" style="display:none" data-page-node-id="4y8JkKCVxRBgs1Stnq1Vjd"></div>
+      <div class="form-label" style="margin:4px 0 8px" data-page-node-id="tsOc5PLjjlt3fqsH5uKV9e">套装内产品（至少 2 件，填「单买价」用于按比例分摊）</div>
+      <div id="b-items" data-page-node-id="XnovGB9uJIClnC44VwKG5Z"></div>
+      <button class="btn" id="b-add" style="width:100%;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;color:var(--ink2)" data-page-node-id="M84uSxEl8OosmvEMr0lEc0">+ 添加一件</button>
     </div>
-    <div class="modal-foot">
-      <button class="btn" id="b-cancel" style="flex:0 0 auto">取消</button>
-      <button class="btn btn-primary" id="b-save">生成分摊记录</button>
+    <div class="modal-foot" data-page-node-id="S7MZ5w5OipCJVfM3eRRP3k">
+      <button class="btn" id="b-cancel" style="flex:0 0 auto" data-page-node-id="bptCTwpTcfAoef8KhtI25b">取消</button>
+      <button class="btn btn-primary" id="b-save" data-page-node-id="sYjCZg007umkt2n00DdZvK">生成分摊记录</button>
     </div>
   </div>
 </div>
 
 <!-- confirm -->
-<div class="confirm-mask" id="confirmMask">
-  <div class="confirm-box">
-    <p id="confirmText">确定要清空所有数据吗？</p>
-    <div class="confirm-actions">
-      <button class="btn" id="confirmCancel">取消</button>
-      <button class="btn btn-primary" id="confirmOk" style="background:var(--rose)">确定</button>
+<div class="confirm-mask" id="confirmMask" data-page-node-id="bnwFHpLx4k2E1f6Ngod5QX">
+  <div class="confirm-box" data-page-node-id="fBw0duydrSvDf9ehFPgqNK">
+    <p id="confirmText" data-page-node-id="BF7Fu1PdwPdGpc58wRlEB4">确定要清空所有数据吗？</p>
+    <div class="confirm-actions" data-page-node-id="h3wvhc0CfcCKDM1U81SEbt">
+      <button class="btn" id="confirmCancel" data-page-node-id="1wkbZttD6pP6DuSAkZlZzX">取消</button>
+      <button class="btn btn-primary" id="confirmOk" style="background:var(--rose)" data-page-node-id="46ByUffIQXA8jZTvO7N8Kj">确定</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" data-page-node-id="uxw6QOGAAkVQEsVPJA6ExC"></div>
 
 <script>
 const STORE_KEY='wb_dresser_products';
-const PRICELOG_KEY='wb_dresser_priceLog';
+const LEGACY_PRICELOG_KEY='wb_dresser_priceLog'; // v3 起停用：价格统一来自产品档案，仅用于启动时清理历史残留
 const CATEGORIES=['护肤-洁面','护肤-水乳','护肤-精华','护肤-面霜','护肤-防晒','护肤-面膜','彩妆-底妆','彩妆-唇妆','彩妆-眼妆','彩妆-眉妆','彩妆-卸妆','其他'];
 const SEASONS=['春','夏','秋','冬'];
 const STATUS=[{k:'sealed',t:'未开封',c:'st-sealed'},{k:'using',t:'使用中',c:'st-using'},{k:'empty',t:'已空瓶',c:'st-empty'},{k:'warning',t:'临期',c:'st-warning'}];
 
 let products=[];
-let priceLogs={};
 let currentTab='today';
 let editingId=null;
 let filterStatus='all';
@@ -452,20 +503,62 @@ const daysBetween=(a,b)=>{if(!a||!b)return 0;const d=(new Date(b)-new Date(a))/8
 const fmtMoney=n=>n?'¥'+Number(n).toLocaleString():'—';
 
 function loadData(){
-  try{const raw=localStorage.getItem(STORE_KEY);products=raw?JSON.parse(raw):[]}
-  catch(e){products=[]}
-  try{priceLogs=JSON.parse(localStorage.getItem(PRICELOG_KEY))||{}}catch(e){priceLogs={}}
-  // 数据迁移：老数据补回购意愿字段，保证向后兼容
+  try{const raw=localStorage.getItem(STORE_KEY);products=raw!==null?JSON.parse(raw):null}
+  catch(e){products=null}
+  // v3 迁移：价格只来自产品档案，清除历史「记一笔价格」残留（含那条删不掉的手动记录）
+  try{localStorage.removeItem(LEGACY_PRICELOG_KEY)}catch(e){}
+  // 只在真正的本地首次（无任何存储记录）才塞 demo，避免污染云端
+  if(products===null){
+    products=[];
+    if(!localStorage.getItem('wb_dresser_seeded')){seedDemo();localStorage.setItem('wb_dresser_seeded','1');}
+  }
   products.forEach(p=>{if(p.repurchase===undefined)p.repurchase=''});
-  if(!products.length){seedDemo()}
 }
+let pushTimer=null;
 function saveData(){
   localStorage.setItem(STORE_KEY,JSON.stringify(products));
-  localStorage.setItem(PRICELOG_KEY,JSON.stringify(priceLogs));
+  localStorage.setItem(DIRTY,'1');   // 标记本机有未推送的改动，避免被云端旧数据覆盖
+  localStorage.removeItem(RO_MIRROR);// 本机已产生真实改动，不再是云端只读镜像
+  updateSync();
+  // 改动后延迟回推云端，避免连点造成多次请求
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(()=>giteePush(false),1200);
+}
+// 仅在写入示例数据时使用：不算作用户改动，不置脏标记
+function saveSeed(){
+  localStorage.setItem(STORE_KEY,JSON.stringify(products));
   updateSync();
 }
-function updateSync(){
-  $('#syncText').textContent='本地 · '+products.length+'件';
+function updateSync(ok,msg){
+  const dot=document.querySelector('.sync-dot');
+  const el=$('#syncText');
+  const at=localStorage.getItem(LAST_SYNC)||'';
+  const n=products.length;
+  if(!getCfg().token){
+    // 未配令牌：公开仓库也能只读拉取。用 RO_MIRROR 判断本机这份数据是否来自云端，避免误显示成「已同步」
+    if(ok===true||localStorage.getItem(RO_MIRROR)==='1'){
+      el.textContent='只读同步 · '+n+'件'+(at?(' · '+at):'');
+      if(dot)dot.style.background='var(--blue)';
+    }else{
+      el.textContent='本地存储 · '+n+'件';
+      if(dot)dot.style.background='var(--ink3)';
+    }
+    return;
+  }
+  // 状态由「是否存在未推送改动」推导，而不是依赖调用方传参，
+  // 否则每次 render() 重绘都会把「已同步」打回「待同步」
+  if(ok===false){
+    el.textContent=(msg||'同步失败')+' · '+n+'件';
+    if(dot)dot.style.background='#e5484d';
+    return;
+  }
+  if(ok===true||(!localStorage.getItem(DIRTY)&&at)){
+    el.textContent='已同步 · '+n+'件'+(at?(' · '+at):'');
+    if(dot)dot.style.background='var(--green)';
+  }else{
+    el.textContent='待同步 · '+n+'件';
+    if(dot)dot.style.background='var(--gold)';
+  }
 }
 
 function seedDemo(){
@@ -481,13 +574,8 @@ function seedDemo(){
     {id:uid(),brand:'薇诺娜',name:'舒护特护霜',category:'护肤-面霜',spec:'50g',price:237,buyDate:ds(-15),openDate:'',emptyDate:'',expireDate:ds(+1000),shelfLife:'3年',stock:100,seasons:[],score:0,feeling:'',status:'sealed',repurchase:'',bundle:'双11礼盒·天猫',bundleTotal:399,createdAt:ds(-15)},
     {id:uid(),brand:'薇诺娜',name:'清透防晒乳',category:'护肤-防晒',spec:'50g',price:162,buyDate:ds(-15),openDate:'',emptyDate:'',expireDate:ds(+1000),shelfLife:'3年',stock:100,seasons:['夏'],score:0,feeling:'',status:'sealed',repurchase:'',bundle:'双11礼盒·天猫',bundleTotal:399,createdAt:ds(-15)}
   ];
-  priceLogs={
-    '兰蔻|小黑瓶精华肌底液':[
-      {date:ds(-750),price:1150,channel:'专柜原价'},
-      {date:ds(-390),price:980,channel:'天猫双11'}
-    ]
-  };
-  saveData();
+  localStorage.setItem(SEED_SIG,seedSig(products));  // 记录示例数据指纹，供只读同步判断
+  saveSeed();
 }
 
 // ---------- status calc ----------
@@ -505,7 +593,6 @@ function statusInfo(k){return STATUS.find(s=>s.k===k)||STATUS[2]}
 
 // ---------- price group helpers ----------
 const norm=s=>String(s||'').trim().toLowerCase();
-const legacyKey=p=>(p.brand.trim()+'|'+p.name.trim()).toLowerCase();
 const gKey=p=>(p.brand.trim()+'|'+p.name.trim()+'|'+norm(p.spec)).toLowerCase();
 // 解析规格中的容量/重量：支持 50ml / 15ml×2 / 2×15ml / 40g / 100毫升
 function parseSpecQty(spec){
@@ -526,19 +613,14 @@ function parseSpecQty(spec){
   }
   return null;
 }
-// 合并购买记录 + 手动价格记录（兼容旧的无规格日志 key）
+// 价格唯一来源：产品档案中「添加 / 编辑产品」时填写的购买金额(price) 与购买日期(buyDate)
 function priceRecordsFor(g){
-  const full=gKey(g),legacy=legacyKey(g);
+  const full=gKey(g);
   const recs=[];
   products.forEach(p=>{
-    if(gKey(p)===full&&p.buyDate&&p.price)recs.push({date:p.buyDate,price:Number(p.price),channel:p.bundle?('套装分摊·'+p.bundle):'购买记录'});
-  });
-  const seen=new Set(recs.map(r=>r.date+'|'+r.price));
-  [full,legacy].forEach(k=>{
-    (priceLogs[k]||[]).forEach(r=>{
-      const sig=r.date+'|'+Number(r.price);
-      if(!seen.has(sig)){seen.add(sig);recs.push({date:r.date,price:Number(r.price),channel:r.channel||'手动记录'})}
-    });
+    if(gKey(p)===full&&p.buyDate&&p.price){
+      recs.push({pid:p.id,date:p.buyDate,price:Number(p.price),channel:p.bundle?('套装分摊·'+p.bundle):'购买记录'});
+    }
   });
   recs.sort((a,b)=>a.date<b.date?-1:1);
   return recs;
@@ -606,18 +688,9 @@ function renderFilterBar(){
     b.onclick=()=>{filterCat=b.dataset.cat;renderFilterBar();renderArchive()};
   });
 }
-function renderStatusBar(){
-  const bar=$('#statusBar');
-  const opts=[{k:'all',t:'全部状态'},...STATUS];
-  bar.innerHTML=opts.map(o=>`<button class="filter-opt ${filterStatus===o.k?'active':''}" data-st="${o.k}">${o.t}</button>`).join('');
-  bar.querySelectorAll('.filter-opt').forEach(b=>{
-    b.onclick=()=>{filterStatus=b.dataset.st;renderStatusBar();renderArchive()};
-  });
-}
 
 function renderArchive(){
   renderFilterBar();
-  renderStatusBar();
   const grid=$('#archiveGrid');
   let list=products.filter(p=>{
     if(filterStatus!=='all' && calcStatus(p)!==filterStatus)return false;
@@ -932,7 +1005,7 @@ function renderPrice(){
     else{trend='持平 →';cls='flat'}
     const sq=parseSpecQty(g.spec);
     const unitLine=sq?`<span>单位价 <b style="color:var(--blue)">¥${(latest.price/sq.qty).toFixed(1)}/${sq.unit}</b></span>`:'';
-    const rows=recs.map(r=>`<div class="price-row"><span style="color:var(--ink3)">${fmtDate(r.date)}</span><span style="font-weight:600">¥${r.price}</span><span style="color:var(--ink3);font-size:11px;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.channel||''}</span></div>`).join('');
+    const rows=recs.map(r=>`<div class="price-row"><span style="color:var(--ink3)">${fmtDate(r.date)}</span><span style="font-weight:600">¥${r.price}</span><span style="color:var(--ink3);font-size:11px;max-width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.channel||''}</span>${r.pid?`<button class="price-edit" data-pid="${r.pid}" title="去产品档案修改该笔价格">改</button>`:''}</div>`).join('');
     return `<div class="panel" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div style="min-width:0">
@@ -950,10 +1023,10 @@ function renderPrice(){
         ${unitLine}
       </div>
       <div style="border-top:1px dashed var(--line);margin-top:4px">${rows}</div>
-      <button class="btn" style="margin-top:10px" data-key="${encodeURIComponent(g.k)}">+ 记一笔价格</button>
+      ${recs.length<2?`<div class="price-tip">再买一次同款、并在「添加产品」时填写购买金额，即可生成价格对比曲线</div>`:''}
     </div>`;
   }).join('');
-  box.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>openPriceModal(decodeURIComponent(b.dataset.key)));
+  box.querySelectorAll('[data-pid]').forEach(b=>b.onclick=()=>openForm(b.dataset.pid));
 }
 
 // ---------- form ----------
@@ -1062,8 +1135,6 @@ function openForm(id,prefill){
       repurchase:rbVal,
       feeling:body.querySelector('#f-feeling').value.trim(),
       status,
-      bundle:p.bundle||'',
-      bundleTotal:p.bundleTotal||0,
       createdAt:p.createdAt||today()
     };
     if(id){const i=products.findIndex(x=>x.id===id);products[i]=obj;toast('已更新')}
@@ -1106,10 +1177,6 @@ function openDetail(id){
   `;
   $('#detailModal').classList.add('show');
   $('#detailEdit').onclick=()=>{closeDetail();openForm(id)};
-  $('#detailCopy').onclick=()=>{
-    closeDetail();
-    openForm(null,{...p,id:undefined,buyDate:'',openDate:'',emptyDate:'',expireDate:'',stock:100,status:'sealed',bundle:'',bundleTotal:0,createdAt:''});
-  };
   $('#detailDelete').onclick=()=>{
     closeDetail();
     showConfirm('确定要删除这个产品吗？',()=>{
@@ -1133,7 +1200,7 @@ function toast(msg){
 
 // ---------- backup ----------
 function exportData(){
-  const data={version:2,exportedAt:new Date().toISOString(),products,priceLogs};
+  const data={version:3,exportedAt:new Date().toISOString(),products};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1141,38 +1208,6 @@ function exportData(){
   a.click();
   URL.revokeObjectURL(a.href);
   toast('已导出 '+products.length+' 条');
-}
-// Excel/CSV 导出：UTF-8 BOM 保证中文不乱码，数字列为纯数字方便数据透视
-function exportCSV(){
-  if(!products.length){toast('暂无数据可导出');return}
-  const rbTxt=v=>v==='yes'?'想回购':v==='no'?'不回购':v==='maybe'?'观望':'';
-  const headers=['品牌','产品名','品类','规格','购买金额','购买时间','启用时间','空瓶时间','保质期','到期日','库存余量%','适合季节','综合评分','回购意愿','使用感受','使用状态','所属套装','套装实付','创建时间'];
-  const esc=v=>{
-    const s=String(v==null?'':v);
-    return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
-  };
-  const rows=products.map(p=>[
-    p.brand||'',p.name||'',p.category||'',p.spec||'',
-    Number(p.price)||0,
-    p.buyDate||'',p.openDate||'',p.emptyDate||'',
-    p.shelfLife||'',p.expireDate||'',
-    p.stock!=null?p.stock:'',
-    (p.seasons||[]).join('、'),
-    p.score||0,
-    rbTxt(p.repurchase),
-    (p.feeling||'').replace(/\r?\n/g,' '),
-    statusInfo(calcStatus(p)).t,
-    p.bundle||'',p.bundleTotal||'',
-    p.createdAt||''
-  ]);
-  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(esc).join(',')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='梳妆台明细_'+today()+'.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('已导出 '+products.length+' 条，Excel 打开即可透视');
 }
 function importData(file){
   const reader=new FileReader();
@@ -1187,13 +1222,6 @@ function importData(file){
           if(p.repurchase===undefined)p.repurchase='';
           if(!existing.has(p.id)){products.push(p);added++}
         });
-        if(data.priceLogs&&typeof data.priceLogs==='object'){
-          Object.entries(data.priceLogs).forEach(([k,arr])=>{
-            if(!Array.isArray(arr))return;
-            priceLogs[k]=priceLogs[k]||[];
-            arr.forEach(r=>{if(!priceLogs[k].some(x=>x.date===r.date&&x.price===r.price))priceLogs[k].push(r)});
-          });
-        }
         saveData();render();toast('已导入 '+added+' 条');
       });
     }catch(err){toast('文件格式错误')}
@@ -1224,7 +1252,6 @@ $('#formClose').onclick=closeForm;
 $('#formCancel').onclick=closeForm;
 $('#detailClose').onclick=closeDetail;
 $('#exportBtn').onclick=exportData;
-$('#csvBtn').onclick=exportCSV;
 $('#importBtn').onclick=()=>$('#importFile').click();
 $('#importFile').onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''};
 $('#clearBtn').onclick=()=>{
@@ -1237,29 +1264,7 @@ $('#confirmOk').onclick=()=>{$('#confirmMask').classList.remove('show');if(confi
 $('#searchInput').oninput=e=>{searchKw=e.target.value.trim();renderArchive()};
 
 // ---------- price log modal ----------
-let priceKey=null;
-function openPriceModal(key){
-  priceKey=key;
-  $('#pf-date').value=today();
-  $('#pf-price').value='';
-  $('#pf-channel').value='';
-  const p=products.find(x=>gKey(x)===key);
-  $('#priceTitle').textContent='记价格 · '+(p?p.brand+' '+p.name:key.split('|').join(' '));
-  $('#priceModal').classList.add('show');
-}
-$('#priceClose').onclick=()=>$('#priceModal').classList.remove('show');
-$('#priceCancel').onclick=()=>$('#priceModal').classList.remove('show');
-$('#priceSave').onclick=()=>{
-  const price=Number($('#pf-price').value);
-  if(!price){toast('请填写价格');return}
-  const date=$('#pf-date').value||today();
-  priceLogs[priceKey]=priceLogs[priceKey]||[];
-  priceLogs[priceKey].push({date,price,channel:$('#pf-channel').value.trim()});
-  saveData();renderPrice();renderRebuy();
-  $('#priceModal').classList.remove('show');
-  toast('已记录价格');
-};
-$('#priceModal').addEventListener('click',e=>{if(e.target.id==='priceModal')e.target.classList.remove('show')});
+// v3 已移除：价格只允许在「添加 / 编辑产品」时录入，不再提供单独记价入口
 
 // close modal on mask click
 $('#formModal').addEventListener('click',e=>{if(e.target.id==='formModal')closeForm()});
@@ -1272,7 +1277,7 @@ function addBundleItem(){
   div.className='b-item';
   div.innerHTML=`
     <div class="form-row">
-      <div class="form-group"><label class="form-label">品牌</label><input class="form-input bi-brand" placeholder="留空则用统一品牌"></div>
+      <div class="form-group"><label class="form-label">品牌 <span class="req">*</span></label><input class="form-input bi-brand" placeholder="如 兰蔻"></div>
       <div class="form-group"><label class="form-label">产品名 <span class="req">*</span></label><input class="form-input bi-name" placeholder="如 小黑瓶"></div>
     </div>
     <div class="form-row-3">
@@ -1288,21 +1293,6 @@ function addBundleItem(){
   div.querySelector('.bi-del').onclick=()=>{div.remove();updateBundleCalc()};
   div.querySelectorAll('input').forEach(i=>i.addEventListener('input',updateBundleCalc));
   updateBundleCalc();
-  return div;
-}
-function copyBundleItem(){
-  const items=[...document.querySelectorAll('#b-items .b-item')];
-  if(!items.length){toast('还没有可复制的条目');return}
-  const src=items[items.length-1];
-  const div=addBundleItem();
-  div.querySelector('.bi-brand').value=src.querySelector('.bi-brand').value;
-  div.querySelector('.bi-name').value=src.querySelector('.bi-name').value;
-  div.querySelector('.bi-cat').value=src.querySelector('.bi-cat').value;
-  div.querySelector('.bi-spec').value=src.querySelector('.bi-spec').value;
-  div.querySelector('.bi-ref').value=src.querySelector('.bi-ref').value;
-  updateBundleCalc();
-  div.scrollIntoView({behavior:'smooth',block:'nearest'});
-  toast('已复制上一条，改改就能用');
 }
 function updateBundleCalc(){
   const total=Number($('#b-total').value)||0;
@@ -1321,7 +1311,6 @@ function updateBundleCalc(){
   }else{sm.style.display='none'}
 }
 function openBundleForm(){
-  $('#b-brand').value='';
   $('#b-name').value='';
   $('#b-date').value=today();
   $('#b-total').value='';
@@ -1339,16 +1328,14 @@ function saveBundle(){
   if(!total||total<=0){toast('请填写套装总价');return}
   const items=[...document.querySelectorAll('#b-items .b-item')];
   if(items.length<2){toast('套装至少需要 2 件产品');return}
-  const globalBrand=$('#b-brand').value.trim();
   const parsed=items.map(it=>({
-    brand:it.querySelector('.bi-brand').value.trim()||globalBrand,
+    brand:it.querySelector('.bi-brand').value.trim(),
     name:it.querySelector('.bi-name').value.trim(),
     category:it.querySelector('.bi-cat').value,
     spec:it.querySelector('.bi-spec').value.trim(),
     ref:Number(it.querySelector('.bi-ref').value)||0
   }));
-  if(parsed.some(x=>!x.name)){toast('每件都要填产品名');return}
-  if(parsed.some(x=>!x.brand)){toast('品牌栏留空时请先填顶部的「统一品牌」');return}
+  if(parsed.some(x=>!x.brand||!x.name)){toast('每件都要填品牌和产品名');return}
   if(parsed.some(x=>x.ref<=0)){toast('每件都要填单买参考价（用于分摊）');return}
   const sum=parsed.reduce((s,x)=>s+x.ref,0);
   const label=name?name+(channel?'·'+channel:''):(channel||'套装');
@@ -1370,16 +1357,359 @@ function saveBundle(){
   toast('已生成 '+parsed.length+' 条套装记录（金额已分摊）');
 }
 $('#b-add').onclick=addBundleItem;
-$('#b-copy').onclick=copyBundleItem;
 $('#b-cancel').onclick=()=>$('#bundleModal').classList.remove('show');
 $('#bundleClose').onclick=()=>$('#bundleModal').classList.remove('show');
 $('#b-save').onclick=saveBundle;
 $('#b-total').addEventListener('input',updateBundleCalc);
 $('#bundleModal').addEventListener('click',e=>{if(e.target.id==='bundleModal')e.target.classList.remove('show')});
 
+// ---------- cloud sync ----------
+// 手机 / 电脑共用云端仓库里的 data.js：打开页面自动拉取，改动后自动回推
+const SC={p:'wb_dresser_sync_platform',o:'wb_dresser_sync_owner',r:'wb_dresser_sync_repo',t:'wb_dresser_sync_token',b:'wb_dresser_sync_branch'};
+const MIG_V3='wb_dresser_mig_v3';
+const LAST_SYNC='wb_dresser_last_sync';
+const DIRTY='wb_dresser_dirty';
+const RO_MIRROR='wb_dresser_ro_mirror';  // 本机这份数据只是云端的只读镜像（未配令牌时拉下来的）
+const SEED_SIG='wb_dresser_seed_sig';    // 示例数据的指纹，用于判断本机是否还是「没动过的示例数据」
+const seedSig=a=>a.length+'|'+a.map(p=>String(p.brand||'')+'/'+String(p.name||'')).join(',');
+// 预置仓库：这里写死默认值，换仓库在「同步设置」里改，会存进本机 localStorage 覆盖默认值
+const DEF={platform:'github',owner:'puzzle3428',repo:'desser'};
+const defBranch=p=>p==='gitee'?'master':'main';
+function getCfg(){
+  const platform=localStorage.getItem(SC.p)||DEF.platform;
+  return{
+    platform:platform,
+    owner:localStorage.getItem(SC.o)||DEF.owner,
+    repo:localStorage.getItem(SC.r)||DEF.repo,
+    token:localStorage.getItem(SC.t)||'',
+    branch:localStorage.getItem(SC.b)||defBranch(platform),
+    path:'data.js'
+  };
+}
+const setCfg=v=>{
+  localStorage.setItem(SC.p,v.platform||DEF.platform);
+  localStorage.setItem(SC.o,v.owner||'');
+  localStorage.setItem(SC.r,v.repo||'');
+  localStorage.setItem(SC.t,v.token||'');
+  localStorage.setItem(SC.b,v.branch||'');
+};
+// 允许「无令牌只读拉取」的前提：本机数据是没动过的示例数据，或上一轮已拉成云端镜像。
+// 只要本机存在真实数据（例如旧版本存下来的），或在本版改过任何东西（DIRTY），一律返回 false，绝不覆盖。
+function canReadOnlyMirror(){
+  if(localStorage.getItem(RO_MIRROR)==='1')return true;
+  const raw=localStorage.getItem(STORE_KEY);
+  if(!raw)return true;
+  try{
+    const a=JSON.parse(raw);
+    if(!Array.isArray(a)||!a.length)return true;
+    return seedSig(a)===localStorage.getItem(SEED_SIG);
+  }catch(e){return false}
+}
+function syncEp(c){
+  const ref=(c.platform==='gitee'?'&ref=':'?ref=')+c.branch;
+  if(c.platform==='github'){
+    return{
+      raw:'https://raw.githubusercontent.com/'+c.owner+'/'+c.repo+'/'+c.branch+'/'+c.path+'?t='+Date.now(),
+      api:'https://api.github.com/repos/'+c.owner+'/'+c.repo+'/contents/'+c.path,
+      get:ref,
+      headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json'}
+    };
+  }
+  return{
+    raw:'https://gitee.com/'+c.owner+'/'+c.repo+'/raw/'+c.branch+'/'+c.path+'?t='+Date.now(),
+    api:'https://gitee.com/api/v5/repos/'+c.owner+'/'+c.repo+'/contents/'+c.path+'?access_token='+encodeURIComponent(c.token),
+    get:ref,
+    headers:{}
+  };
+}
+function parsePayload(txt){
+  const m=String(txt||'').match(/window\.__DATA__\s*=\s*(\{[\s\S]*?\})\s*;/);
+  if(!m)return null;
+  let d;try{d=JSON.parse(m[1])}catch(e){return null}
+  return(d&&Array.isArray(d.products))?d:null;
+}
+function normalizeList(list){list.forEach(p=>{if(p.repurchase===undefined)p.repurchase=''});return list}
+
+// 读取云端数据，但不改动本机
+async function giteeFetchRemote(){
+  const c=getCfg();if(!c.owner||!c.repo)return null;
+  const ep=syncEp(c);
+  try{
+    // 优先公开 raw（无需 token）；失败回退 API（私有仓库 / 带 token）
+    let txt='';
+    const r=await fetch(ep.raw,{cache:'no-store'});
+    if(r.ok)txt=await r.text();
+    if(!parsePayload(txt)){
+      if(!c.token)return null;   // 公开仓库读 raw 即可；私有仓库必须带令牌走 API
+      const a=await fetch(ep.api+ep.get,{headers:ep.headers});
+      if(!a.ok)return null;
+      const j=await a.json();
+      if(!j||!j.content)return null;
+      txt=decodeURIComponent(escape(atob(String(j.content).replace(/\s/g,''))));
+    }
+    const d=parsePayload(txt);
+    if(!d)return null;
+    normalizeList(d.products);
+    return d;
+  }catch(e){return null}
+}
+// 用云端数据覆盖本机；返回 true 表示本机确实被更新
+function applyRemote(d){
+  if(!d)return false;
+  if(JSON.stringify(d.products)===JSON.stringify(products)){updateSync(true);return false}
+  products=d.products;
+  saveLocalOnly();
+  if(getCfg().token)localStorage.removeItem(DIRTY);
+  else{
+    localStorage.setItem(RO_MIRROR,'1');   // 无令牌拉下来的只是镜像，用户一改动即失效
+    localStorage.setItem(LAST_SYNC,new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false}));
+  }
+  updateSync(true);
+  return true;
+}
+// 拉取云端；返回 true 表示本机数据已被云端更新
+async function giteePull(){
+  const c=getCfg();if(!c.owner||!c.repo)return false;
+  return applyRemote(await giteeFetchRemote());
+}
+async function giteePush(showToast){
+  const c=getCfg();if(!c.token){updateSync();return}
+  const ep=syncEp(c);
+  const content='window.__DATA__='+JSON.stringify({products})+';\n';
+  const enc=btoa(unescape(encodeURIComponent(content)));
+  try{
+    let sha;
+    const g=await fetch(ep.api+ep.get,{headers:ep.headers});
+    if(g.ok){const j=await g.json();sha=j&&j.sha}
+    const body={message:'sync '+new Date().toISOString(),content:enc,branch:c.branch};
+    if(sha)body.sha=sha;
+    const res=await fetch(ep.api,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ep.headers),body:JSON.stringify(body)});
+    if(res.ok){
+      localStorage.setItem(LAST_SYNC,new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false}));
+      localStorage.removeItem(DIRTY);
+      updateSync(true);
+      if(showToast)toast('已同步到云端');
+    }else{
+      updateSync(false,'同步失败');
+      if(showToast)toast('同步失败：'+(await res.text()).slice(0,80));
+    }
+  }catch(e){updateSync(false,'同步失败');if(showToast)toast('同步失败：网络错误或跨域被拦截');}
+}
+function saveLocalOnly(){localStorage.setItem(STORE_KEY,JSON.stringify(products))}
+
+// 仅拉取（切回页面 / 网络恢复时用）；本机有未推送改动时跳过，避免覆盖
+async function pullOnly(){
+  const c=getCfg();
+  if(localStorage.getItem(DIRTY))return;
+  if(!c.token&&!canReadOnlyMirror())return;   // 本机有真实数据 → 没令牌绝不覆盖
+  if(await giteePull()){render();toast(c.token?'已从云端同步':'已刷新云端数据')}
+}
+async function initSync(){
+  const c=getCfg();
+  if(!c.token){
+    updateSync();
+    // 公开仓库：没配令牌也能只读拉取。仅当本机是示例数据 / 只读镜像时才执行，绝不覆盖本机已有数据
+    if(!localStorage.getItem(DIRTY)&&canReadOnlyMirror()){
+      const d=await giteeFetchRemote();
+      if(d&&d.products.length){applyRemote(d);render();toast('已从云端读取数据（只读）');}
+    }
+    return;
+  }
+  updateSync();
+  // 本机有还没推上去的改动 → 以本机为准直接回推，防止被云端旧数据盖掉
+  if(localStorage.getItem(DIRTY)&&products.length){await giteePush(false);return}
+  const pulled=await giteePull();
+  if(pulled){render();toast('已从云端同步');}
+  // v3 一次性迁移：把云端历史数据里的「手动价格记录」一并清掉
+  if(!localStorage.getItem(MIG_V3)&&products.length){
+    localStorage.setItem(MIG_V3,'1');
+    await giteePush(false);
+    return;
+  }
+  if(!pulled&&products.length)await giteePush(true);
+  else if(!pulled)updateSync(false,'云端暂无数据');
+}
+async function manualSync(){
+  if(!getCfg().token){toast('请先完成同步设置');openSyncSettings();return}
+  toast('正在同步…');
+  if(await giteePull()){render();toast('已从云端同步');return}
+  await giteePush(true);
+}
+// ---------- sync settings modal ----------
+// 说明：原实现用 window.prompt 连续弹 5 个系统输入框，在预览 / 内嵌 iframe 里会被浏览器拦截，
+// 表现为「点击同步设置没有反应」，因此改为页面内表单弹窗。
+function syStatus(msg,type){
+  const el=$('#sy-status');
+  el.textContent=msg||'';
+  el.className='sync-status'+(msg?(' show '+(type||'busy')):'');
+}
+function syncHelp(){
+  const plat=$('#sy-platform').value;
+  if(plat!=='github'){
+    $('#sy-help').innerHTML='令牌在哪：Gitee → 设置 → 私人令牌 → 生成新令牌，勾选 <b>projects</b> 权限<br>分支：老仓库一般是 <b>master</b><br>数据文件：仓库根目录下的 <b>data.js</b>（不存在会自动创建）';
+    return;
+  }
+  const ow=($('#sy-owner').value||'').trim()||'—';
+  const rp=($('#sy-repo').value||'').trim()||'—';
+  const br=($('#sy-branch').value||'').trim()||'—';
+  $('#sy-help').innerHTML='一键创建令牌（<b>repo</b> 权限已帮你勾好，直接拉到底点 Generate token）：'
+    +'<a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=desser-sync" target="_blank" rel="noopener noreferrer">github.com/settings/tokens/new</a>'
+    +'<br>目标仓库：<b>'+ow+'/'+rp+'</b> · 分支 <b>'+br+'</b>'
+    +'<br>数据文件：仓库根目录下的 <b>data.js</b>（不存在会自动创建）';
+}
+function readSyncForm(){
+  const platform=$('#sy-platform').value;
+  return{
+    platform:platform,
+    owner:$('#sy-owner').value.trim(),
+    repo:$('#sy-repo').value.trim(),
+    branch:$('#sy-branch').value.trim()||(platform==='github'?'main':'master'),
+    token:$('#sy-token').value.trim(),
+    path:'data.js'
+  };
+}
+let conflictRemote=null;
+function openSyncSettings(){
+  const c=getCfg();
+  conflictRemote=null;
+  $('#sy-conflict').style.display='none';
+  $('#sy-platform').value=c.platform;
+  $('#sy-owner').value=c.owner;
+  $('#sy-repo').value=c.repo;
+  $('#sy-branch').value=c.branch;
+  $('#sy-token').value=c.token;
+  $('#sy-code').value='';
+  syStatus(c.token
+    ?('当前已配置：'+(c.platform==='gitee'?'Gitee':'GitHub')+' · '+c.owner+'/'+c.repo+' · '+c.branch+' · 可读写')
+    :('仓库已预设为 '+c.owner+'/'+c.repo+'（分支 '+c.branch+'），只差一个访问令牌。\n填好令牌点「保存并同步」，本机数据就会传到云端；手机端再填一次即可共用同一份数据。'));
+  syncHelp();
+  $('#syncModal').classList.add('show');
+}
+function closeSyncSettings(){$('#syncModal').classList.remove('show')}
+
+$('#syncModalClose').onclick=closeSyncSettings;
+$('#syncModal').addEventListener('click',e=>{if(e.target.id==='syncModal')closeSyncSettings()});
+$('#sy-platform').addEventListener('change',()=>{
+  const plat=$('#sy-platform').value,br=$('#sy-branch').value.trim();
+  if(plat==='github'&&br==='master')$('#sy-branch').value='main';
+  if(plat==='gitee'&&br==='main')$('#sy-branch').value='master';
+  syncHelp();
+});
+
+$('#sy-test').onclick=async()=>{
+  const cfg=readSyncForm();
+  if(!cfg.owner||!cfg.repo||!cfg.token){syStatus('用户名、仓库名、令牌三项都要填','err');return}
+  syStatus('正在测试连接…','busy');
+  try{
+    const ep=syncEp(cfg);
+    const r=await fetch(ep.api+ep.get,{headers:ep.headers});
+    if(r.ok){syStatus('连接成功 ✅ 仓库可读写。点「保存并同步」即可','ok')}
+    else if(r.status===404){syStatus('已连上服务，但仓库或文件不存在。\n若仓库名写错了请改正；若是刚建的空仓库，直接点「保存并同步」，会自动创建 data.js','warn')}
+    else if(r.status===401||r.status===403){syStatus('令牌无效或权限不足（HTTP '+r.status+'）。请重新生成令牌并勾选对应权限','err')}
+    else{syStatus('连接异常：HTTP '+r.status,'err')}
+  }catch(e){syStatus('请求失败：网络错误，或被浏览器跨域限制。换 Gitee 通常更稳','err')}
+};
+
+$('#sy-save').onclick=async()=>{
+  const cfg=readSyncForm();
+  if(!cfg.owner||!cfg.repo||!cfg.token){syStatus('用户名、仓库名、令牌三项都要填','err');return}
+  const firstTime=!getCfg().token;
+  setCfg(cfg);
+  localStorage.removeItem(MIG_V3);
+  $('#sy-conflict').style.display='none';
+  syStatus('正在读取云端数据…','busy');
+
+  const remote=await giteeFetchRemote();
+
+  // 云端还没有数据 → 直接把本机推上去
+  if(!remote||!remote.products.length){
+    await giteePush(false);
+    const ok=$('#syncText').textContent.indexOf('已同步')>-1;
+    syStatus(ok
+      ?('云端原本没有数据，已把本机 '+products.length+' 条上传 ✅\n换到手机：打开同一页面 → 点顶部「同步设置」→ 用「配置串」一键导入')
+      :('写入失败：'+$('#syncText').textContent+'\n先点「测试连接」看具体原因'),ok?'ok':'err');
+    return;
+  }
+
+  // 本机没有可用数据（或本机是全新设备、且没有未推送的改动）→ 直接以云端为准
+  if(!products.length||(firstTime&&!localStorage.getItem(DIRTY))){
+    const changed=applyRemote(remote);render();
+    syStatus('已从云端同步 '+products.length+' 条数据 ✅'+(changed?'':'（与本机完全一致）')+'\n两个设备现在共用同一份数据了','ok');
+    return;
+  }
+
+  // 两边都有数据 → 不擅自覆盖，交给用户选
+  conflictRemote=remote;
+  syStatus('检测到两边都有数据：\n云端 '+remote.products.length+' 条 · 本机 '+products.length+' 条\n系统不会自动覆盖，请在下面选择以哪边为准','warn');
+  $('#sy-conflict').style.display='grid';
+};
+
+$('#sy-use-cloud').onclick=()=>{
+  if(!conflictRemote){syStatus('云端数据已失效，请重新点「保存并同步」','err');return}
+  applyRemote(conflictRemote);render();conflictRemote=null;
+  $('#sy-conflict').style.display='none';
+  syStatus('已用云端数据覆盖本机：'+products.length+' 条 ✅','ok');
+};
+$('#sy-use-local').onclick=async()=>{
+  $('#sy-conflict').style.display='none';
+  syStatus('正在上传…','busy');
+  await giteePush(false);
+  const ok=$('#syncText').textContent.indexOf('已同步')>-1;
+  syStatus(ok?('已用本机数据覆盖云端：'+products.length+' 条 ✅'):('上传失败：'+$('#syncText').textContent),ok?'ok':'err');
+  conflictRemote=null;
+};
+
+$('#sy-clear').onclick=()=>{
+  setCfg({platform:$('#sy-platform').value,owner:'',repo:'',branch:'',token:''});
+  localStorage.removeItem(MIG_V3);
+  localStorage.removeItem(DIRTY);
+  $('#sy-owner').value='';$('#sy-repo').value='';$('#sy-branch').value='';$('#sy-token').value='';$('#sy-code').value='';
+  $('#sy-conflict').style.display='none';
+  conflictRemote=null;
+  updateSync();
+  syStatus('已关闭同步。本机数据仍保留在浏览器里，不会丢失','warn');
+};
+
+$('#sy-copy').onclick=()=>{
+  const c=readSyncForm();
+  if(!c.owner||!c.repo||!c.token){syStatus('先把三项必填填好，再生成配置串','err');return}
+  const code=btoa(unescape(encodeURIComponent(JSON.stringify(c))));
+  $('#sy-code').value=code;
+  try{
+    $('#sy-code').focus();$('#sy-code').select();document.execCommand('copy');
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).catch(()=>{});
+    syStatus('配置串已生成并复制 ✅\n到手机上：打开页面 → 同步设置 → 粘贴进下面的框 → 点「导入配置」','ok');
+  }catch(e){syStatus('配置串已生成，请手动长按选中复制','warn')}
+};
+
+$('#sy-import').onclick=()=>{
+  const raw=$('#sy-code').value.trim();
+  if(!raw){syStatus('请先把配置串粘贴进来','err');return}
+  let cfg=null;
+  try{cfg=JSON.parse(decodeURIComponent(escape(atob(raw))))}catch(e){}
+  if(!cfg||!cfg.owner||!cfg.repo||!cfg.token){syStatus('配置串无法识别，请确认复制完整（不含多余空格换行）','err');return}
+  $('#sy-platform').value=cfg.platform||'gitee';
+  $('#sy-owner').value=cfg.owner;
+  $('#sy-repo').value=cfg.repo;
+  $('#sy-branch').value=cfg.branch||(cfg.platform==='github'?'main':'master');
+  $('#sy-token').value=cfg.token;
+  syncHelp();
+  syStatus('配置已填入 ✅ 点「保存并同步」拉取云端数据','ok');
+};
+
 // init
 loadData();
 render();
+document.querySelector('.sync-badge').onclick=openSyncSettings;
+$('#syncNowBtn').onclick=manualSync;
+$('#syncCfgBtn').onclick=openSyncSettings;
+let hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){hiddenAt=Date.now();return}
+  if(hiddenAt&&Date.now()-hiddenAt>60000)pullOnly();
+});
+window.addEventListener('online',()=>pullOnly());
+initSync();
 </script>
 </body>
 </html>
