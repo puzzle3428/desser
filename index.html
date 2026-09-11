@@ -159,6 +159,21 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 .filter-bar::-webkit-scrollbar{display:none}
 .filter-opt{flex-shrink:0;padding:6px 12px;border-radius:14px;font-size:12px;color:var(--ink2);background:var(--card);box-shadow:var(--shadow)}
 .filter-opt.active{background:var(--ink);color:#fff}
+/* status filter（v0.3.4：使用状态筛选 + 件数 / 总价统计） */
+.status-bar{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 10px;padding:4px 2px}
+.status-bar::-webkit-scrollbar{display:none}
+.st-card{flex:0 0 auto;min-width:80px;padding:8px 11px;border-radius:12px;background:var(--card);box-shadow:var(--shadow);text-align:left;border:1.5px solid transparent;transition:.15s;font-family:inherit}
+.st-card:active{transform:scale(.97)}
+.st-card.active{background:var(--ink);border-color:var(--ink)}
+.stc-t{display:block;font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.3px;white-space:nowrap}
+.stc-n{display:block;font-size:15px;font-weight:700;color:var(--ink);line-height:1.25;margin-top:2px}
+.stc-n em{font-style:normal;font-size:10px;font-weight:500;color:var(--ink3);margin-left:2px}
+.stc-s{display:block;font-size:10.5px;font-weight:600;color:var(--primary2);margin-top:1px;white-space:nowrap}
+.st-card.active .stc-t,.st-card.active .stc-n,.st-card.active .stc-n em{color:#fff}
+.st-card.active .stc-s{color:#e6d6c4}
+.archive-sum{grid-column:1/-1;display:flex;align-items:center;gap:6px;background:var(--primary-soft);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--primary2);font-weight:600}
+.archive-sum b{font-size:14px}
+.archive-sum .as-clear{margin-left:auto;font-size:11px;font-weight:600;color:var(--ink2);background:var(--card);border-radius:8px;padding:4px 10px;flex-shrink:0}
 /* float add btn */
 .fab{position:fixed;right:18px;bottom:calc(84px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;background:var(--primary);color:#fff;box-shadow:0 6px 20px rgba(192,133,82,.45);display:flex;align-items:center;justify-content:center;z-index:50;transition:.15s}
 .fab:active{transform:scale(.92)}
@@ -271,6 +286,7 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="2uF2zyqVGPvbAwKdBwpu1x"><circle cx="11" cy="11" r="8" data-page-node-id="v37WgW1GxuOK5J4x90rugi"/><line x1="21" y1="21" x2="16.65" y2="16.65" data-page-node-id="fWwY49gECxF6p2CxcdF3VV"/></svg>
       <input type="text" id="searchInput" placeholder="搜索品牌、产品名、品类..." data-page-node-id="WqLWOiYS0FQrLWutJDDwEO">
     </div>
+    <div class="status-bar" id="statusBar"></div>
     <div class="filter-bar" id="filterBar" data-page-node-id="WdO3DaqDs0hC3HKx5fPoAk"></div>
     <div class="grid" id="archiveGrid" data-page-node-id="yzt4jIICkJEBR5bywvsMD7"></div>
   </div>
@@ -408,6 +424,7 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
       <div class="form-group">
         <label class="form-label">访问令牌 <span class="req">*</span></label>
         <input class="form-input" id="sy-token" type="password" placeholder="粘贴令牌，仅保存在本机" autocomplete="off" spellcheck="false">
+        <div class="sync-help" id="sy-token-hint" style="margin:8px 0 0"></div>
       </div>
 
       <div class="sync-help" id="sy-help"></div>
@@ -685,12 +702,53 @@ function renderToday(){
   });
 }
 
+// v0.3.4：状态统计。基准为「品类 + 搜索词」筛选后的集合（不含状态自身），
+// 这样点击某个状态后其余状态的数量与金额不会跳变，便于横向比较。
+function statusAggBase(){
+  return products.filter(p=>{
+    if(filterCat!=='all' && p.category!==filterCat)return false;
+    if(searchKw){
+      const kw=searchKw.toLowerCase();
+      if(!(p.brand.toLowerCase().includes(kw)||p.name.toLowerCase().includes(kw)||p.category.toLowerCase().includes(kw)))return false;
+    }
+    return true;
+  });
+}
+function statusAgg(list){
+  const m={all:{n:0,sum:0}};
+  STATUS.forEach(s=>m[s.k]={n:0,sum:0});
+  list.forEach(p=>{
+    const k=calcStatus(p), v=Number(p.price)||0;
+    if(!m[k])m[k]={n:0,sum:0};
+    m[k].n++; m[k].sum+=v;
+    m.all.n++; m.all.sum+=v;
+  });
+  return m;
+}
+const fmtSum=n=>'¥'+Number(n||0).toLocaleString();
+
 function renderFilterBar(){
-  const bar=$('#filterBar');
+  // ---- 使用状态筛选（含件数与总价）----
+  const agg=statusAgg(statusAggBase());
+  const opts=[{k:'all',t:'全部'}].concat(STATUS.map(s=>({k:s.k,t:s.t})));
+  const bar=$('#statusBar');
+  bar.innerHTML=opts.map(o=>{
+    const a=agg[o.k]||{n:0,sum:0};
+    return `<button class="st-card ${filterStatus===o.k?'active':''}" data-st="${o.k}">`
+      +`<span class="stc-t">${o.t}</span>`
+      +`<span class="stc-n">${a.n}<em>件</em></span>`
+      +`<span class="stc-s">${fmtSum(a.sum)}</span>`
+      +`</button>`;
+  }).join('');
+  bar.querySelectorAll('[data-st]').forEach(b=>{
+    b.onclick=()=>{filterStatus=b.dataset.st;renderArchive()};
+  });
+  // ---- 品类筛选 ----
+  const fbar=$('#filterBar');
   const cats=['all',...CATEGORIES];
-  bar.innerHTML=cats.map(c=>`<button class="filter-opt ${filterCat===c?'active':''}" data-cat="${c}">${c==='all'?'全部品类':c}</button>`).join('');
-  bar.querySelectorAll('.filter-opt').forEach(b=>{
-    b.onclick=()=>{filterCat=b.dataset.cat;renderFilterBar();renderArchive()};
+  fbar.innerHTML=cats.map(c=>`<button class="filter-opt ${filterCat===c?'active':''}" data-cat="${c}">${c==='all'?'全部品类':c}</button>`).join('');
+  fbar.querySelectorAll('.filter-opt').forEach(b=>{
+    b.onclick=()=>{filterCat=b.dataset.cat;renderArchive()};
   });
 }
 
@@ -706,14 +764,21 @@ function renderArchive(){
     }
     return true;
   });
+  // v0.3.4：状态筛选生效时，在列表顶部给出该状态的件数与总价
+  const sum=list.reduce((a,p)=>a+(Number(p.price)||0),0);
+  const head=filterStatus==='all'?''
+    :('<div class="archive-sum">'+statusInfo(filterStatus).t+' · 共 '+list.length+' 件 · 总价 <b>'+fmtSum(sum)+'</b>'
+      +'<button class="as-clear" data-clear="1">取消筛选</button></div>');
   if(!list.length){
-    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg><div>暂无产品，点击右下角 + 添加</div></div>`;
-    return;
+    grid.innerHTML=head+`<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg><div>${filterStatus==='all'?'暂无产品，点击右下角 + 添加':'该状态下暂无产品'}</div></div>`;
+  }else{
+    grid.innerHTML=head+list.map(p=>productCard(p)).join('');
+    grid.querySelectorAll('.pcard').forEach(c=>{
+      c.onclick=()=>openDetail(c.dataset.id);
+    });
   }
-  grid.innerHTML=list.map(p=>productCard(p)).join('');
-  grid.querySelectorAll('.pcard').forEach(c=>{
-    c.onclick=()=>openDetail(c.dataset.id);
-  });
+  const clr=grid.querySelector('[data-clear]');
+  if(clr)clr.onclick=()=>{filterStatus='all';renderArchive()};
 }
 
 function productCard(p){
@@ -1620,8 +1685,12 @@ function openSyncSettings(){
   $('#sy-branch').value=c.branch;
   $('#sy-token').value=c.token;
   $('#sy-code').value='';
+  const tk=c.token||'';
+  $('#sy-token-hint').innerHTML=tk
+    ?('本机已保存令牌（末尾 <b>'+(tk.length>4?tk.slice(-4):tk)+'</b>），打开页面会自动使用，<b>不需要每次都输入</b>。<br>只有换设备、换浏览器、清除浏览器数据，或令牌本身过期时才需重新粘贴。')
+    :('令牌只保存在本机浏览器里，不会上传到任何服务器。建议用细粒度令牌：只授权 <b>'+c.owner+'/'+c.repo+'</b> 这一个仓库、权限选 Contents 的 Read and write。');
   syStatus(c.token
-    ?('当前已配置：'+(c.platform==='gitee'?'Gitee':'GitHub')+' · '+c.owner+'/'+c.repo+' · '+c.branch+' · 可读写')
+    ?('已配置：'+(c.platform==='gitee'?'Gitee':'GitHub')+' · '+c.owner+'/'+c.repo+' · '+c.branch+'\n令牌已保存在本机，日常无需重填。\n（此项只表示配置已填写；写入是否真的可用，以「保存并同步」的结果为准）')
     :('仓库已预设为 '+c.owner+'/'+c.repo+'（分支 '+c.branch+'），只差一个访问令牌。\n填好令牌点「保存并同步」，本机数据就会传到云端；手机端再填一次即可共用同一份数据。'));
   syncHelp();
   $('#syncModal').classList.add('show');
