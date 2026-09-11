@@ -1514,6 +1514,51 @@ function syncEp(c){
     headers:{}
   };
 }
+
+// ---------- v0.3.6 · REQ-020：同步前预检令牌写权限 ----------
+// 背景：原「测试连接」只发 GET，只能证明「读得到」，不能证明「写得进」；
+// 令牌缺写权限时，用户要等到真正推送失败才发现，而 v0.3.4 之前「可读写」的误导文案更加剧了误解。
+//
+// GitHub 做法：POST /repos/{o}/{r}/git/blobs —— 创建一枚临时 blob。
+// 该接口要求 Contents:write，却**不产生提交、不改动任何分支引用**，
+// 因此是少数既能真正验证写权限、又对仓库零副作用的探针（孤立对象由 GitHub 定期回收）。
+// Gitee 无同类接口，做写测试只能真提交一次，代价过高，故不在该平台给确定性结论。
+async function probeWrite(cfg){
+  if(!cfg.token)return{state:'notoken'};
+  if(cfg.platform!=='github')return{state:'n/a'};
+  try{
+    const r=await fetch('https://api.github.com/repos/'+cfg.owner+'/'+cfg.repo+'/git/blobs',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify({content:'desser write-probe '+Date.now(),encoding:'utf-8'})
+    });
+    if(r.status===201)return{state:'ok'};
+    if(r.status===401)return{state:'badtoken',status:r.status};
+    if(r.status===403)return{state:'readonly',status:r.status};
+    if(r.status===404)return{state:'norepo',status:r.status};
+    return{state:'other',status:r.status};
+  }catch(e){return{state:'net'}}
+}
+// 把预检结果翻成人话（用户在表单里刚填、未必已保存的仓库信息也要能显示，故整体传入 cfg）
+function probeWriteText(cfg,res){
+  const repo=cfg.owner+'/'+cfg.repo;
+  if(res.state==='ok')return{type:'ok',msg:'连接成功 ✅ 读、写都通了。\n仓库 '+repo+' 已验证可写，可以放心点「保存并同步」。'};
+  if(res.state==='readonly')return{type:'err',msg:'❌ 令牌只有读取权限，没有写入权限。\n读得到 '+repo+'，但推不上去。\n修法：重新生成令牌 —— 细粒度令牌把 Contents 设为 Read and write；经典令牌勾上 repo。'};
+  if(res.state==='badtoken')return{type:'err',msg:'❌ 令牌无效、已过期或被撤销（HTTP 401）。请重新生成后再试。'};
+  if(res.state==='norepo')return{type:'err',msg:'❌ 找不到 '+repo+'（HTTP 404）。\n两种可能：① 仓库名拼错了；② 令牌看不到它 —— 细粒度令牌须把该仓库加入 Repository access。'};
+  if(res.state==='n/a')return{type:'warn',msg:'读取正常 ✅ Gitee 没有「只验写权限、不动仓库」的接口，写权限将在真正推送时确认，失败会明确告知原因。'};
+  if(res.state==='net')return{type:'warn',msg:'读取正常 ✅ 但写权限预检没发出去（网络或跨域被拦截）。\n不影响继续同步，真的写失败时会明确告知原因。'};
+  return{type:'warn',msg:'读取正常 ✅ 写权限预检结果未识别（HTTP '+(res.status||'?')+'）。不影响继续同步。'};
+}
+// 把「写入失败」的 HTTP 码翻成可操作的原因，而不是甩一段原始响应文本
+function writeErrText(code,body){
+  if(code===401)return '令牌无效或已过期（401）';
+  if(code===403)return '令牌没有写入权限（403）—— 细粒度令牌把 Contents 设为 Read and write，经典令牌勾上 repo';
+  if(code===404)return '令牌看不到该仓库（404）—— 细粒度令牌须把仓库加入 Repository access';
+  if(code===409)return '版本冲突（409）—— 云端刚被另一台设备改过，再点一次同步即可';
+  if(code===422)return '云端拒绝了这次提交（422）'+(body?('：'+String(body).slice(0,80)):'');
+  return 'HTTP '+code+(body?(' '+String(body).slice(0,80)):'');
+}
 function parsePayload(txt){
   const m=String(txt||'').match(/window\.__DATA__\s*=\s*(\{[\s\S]*?\})\s*;/);
   if(!m)return null;
@@ -1590,7 +1635,7 @@ async function giteePush(showToast,force){
       if(showToast)toast('已同步到云端');
     }else{
       updateSync(false,'同步失败');
-      if(showToast)toast('同步失败：'+(await res.text()).slice(0,80));
+      if(showToast)toast('同步失败：'+writeErrText(res.status,await res.text()));
     }
   }catch(e){updateSync(false,'同步失败');if(showToast)toast('同步失败：网络错误或跨域被拦截');}
 }
@@ -1709,14 +1754,20 @@ $('#sy-platform').addEventListener('change',()=>{
 $('#sy-test').onclick=async()=>{
   const cfg=readSyncForm();
   if(!cfg.owner||!cfg.repo||!cfg.token){syStatus('用户名、仓库名、令牌三项都要填','err');return}
-  syStatus('正在测试连接…','busy');
+  syStatus('正在测试连接（先验收，再验写）…','busy');
   try{
     const ep=syncEp(cfg);
     const r=await fetch(ep.api+ep.get,{headers:ep.headers});
-    if(r.ok){syStatus('连接成功 ✅ 仓库可读。\n（此测试只验证读取权限；写入是否可用，以「保存并同步」的结果为准）','ok')}
-    else if(r.status===404){syStatus('已连上服务，但仓库或文件不存在。\n若仓库名写错了请改正；若是刚建的空仓库，直接点「保存并同步」，会自动创建 data.js','warn')}
-    else if(r.status===401||r.status===403){syStatus('令牌无效或权限不足（HTTP '+r.status+'）。请重新生成令牌并勾选对应权限','err')}
-    else{syStatus('连接异常：HTTP '+r.status,'err')}
+    // 读取就因令牌类错误失败 → 直接报错，无需再验写
+    if(!r.ok&&(r.status===401||r.status===403)){
+      syStatus('读取这一步就失败了：令牌无效或权限不足（HTTP '+r.status+'）。\n请重新生成令牌后再试。','err');
+      return;
+    }
+    const w=await probeWrite(cfg);
+    const t=probeWriteText(cfg,w);
+    if(r.ok)syStatus(t.msg,t.type);
+    else if(r.status===404&&w.state==='ok')syStatus('连接成功 ✅ 读、写都通了。\ndata.js 还不存在（新建仓库属正常），点「保存并同步」会自动创建。','ok');
+    else syStatus('读取返回 HTTP '+r.status+'。\n\n'+t.msg,t.type);
   }catch(e){syStatus('请求失败：网络错误，或被浏览器跨域限制。换 Gitee 通常更稳','err')}
 };
 
@@ -1727,6 +1778,13 @@ $('#sy-save').onclick=async()=>{
   setCfg(cfg);
   localStorage.removeItem(MIG_V3);
   $('#sy-conflict').style.display='none';
+  // v0.3.6 · REQ-020：写权限预检。目的不是拦人，而是把「填完 → 读通了 → 推不上去」
+  // 这种最挫败的失败提前暴露成一句人话。预检本身不确定（网络类）时一律放行，绝不阻断正常同步。
+  const pw=await probeWrite(cfg);
+  if(pw.state==='readonly'||pw.state==='badtoken'||pw.state==='norepo'){
+    syStatus('已暂停同步 —— 写权限预检未通过。\n\n'+probeWriteText(cfg,pw).msg,'err');
+    return;
+  }
   syStatus('正在读取云端数据…','busy');
 
   const remote=await giteeFetchRemote();
